@@ -121,7 +121,6 @@ function generateColors(customEnvColors) {
     return output
 }
 
-
 module.exports = (map, directory) => {
     let mapData = [];
     for (const key in map.areas) {

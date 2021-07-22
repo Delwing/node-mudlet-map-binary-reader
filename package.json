@@ -1,8 +1,11 @@
 {
   "name": "mudlet-map-reader",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "index.js",
   "license": "MIT",
+  "repository": {
+      "url": "https://github.com/Delwing/node-mudlet-map-binary-reader"
+  },
   "dependencies": {
     "qtdatastream": "^1.1.0"
   },
