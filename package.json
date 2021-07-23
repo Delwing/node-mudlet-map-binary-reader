@@ -11,5 +11,6 @@
   },
   "scripts": {
       "run" : "node index.js"
-  }
+  },
+  "exports": "./export.js"
 }
