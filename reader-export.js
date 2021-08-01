@@ -60,8 +60,10 @@ function getLabel(label, directory) {
             fs.mkdirSync(`${directory}/labels`)
         }
         fs.writeFileSync(`${directory}/labels/${label.areaId}-${label.labelId}.png`, label.pixMap);
+        delete label.pixMap;
+    } else {
+        label.pixMap = Buffer.from(label.pixMap).toString('base64');
     }
-    delete label.pixMap
     label.X = label.pos[0]
     label.Y = label.pos[1]
     label.Z = label.pos[2]
@@ -103,15 +105,14 @@ function generateColors(customEnvColors) {
             delete element.pad
             delete element.alpha
             delete element.spec
-            customEnvColors[key] = [element.r, element.g, element.b]
+            colors[key] = [element.r, element.g, element.b]
         }
     }
 
     let output = []
-    let merged = {...colors, customEnvColors}
-    for (const key in merged) {
-        if (Object.hasOwnProperty.call(merged, key)) {
-            const element = merged[key];
+    for (const key in colors) {
+        if (Object.hasOwnProperty.call(colors, key)) {
+            const element = colors[key];
             output.push({
                 envId: key,
                 colors: element
@@ -130,7 +131,7 @@ module.exports = (map, directory) => {
           areaName: map.areaNames[key],
           areaId: key,
           rooms: element.rooms.map((element) => converRoom(map.rooms[element])),
-          labels : map.labels[key] ? map.labels[key].map((element) => getLabel(element, directory)) : []
+          labels : map.labels[key] ? map.labels[key].map((element) => getLabel(element)) : []
         };
         mapData.push(area);
       }

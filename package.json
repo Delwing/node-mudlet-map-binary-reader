@@ -9,7 +9,7 @@
     "qtdatastream": "^1.1.0"
   },
   "scripts": {
-      "run" : "node index.js"
+      "run" : "node index.js C:\\Users\\delwi\\.config\\mudlet\\profiles\\Arkadia\\map_master3.dat"
   },
   "exports": "./export.js"
 }
