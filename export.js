@@ -1,4 +1,6 @@
 module.exports = {
-  Reader: require("./map-reader"),
-  Exporter: require("./reader-export"),
+    MudletMapReader = {
+        read: require("./map-reader"),
+        export: require("./reader-export")
+    }
 };
