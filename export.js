@@ -1,5 +1,5 @@
 module.exports = {
-    MudletMapReader = {
+    MudletMapReader : {
         read: require("./map-reader"),
         export: require("./reader-export")
     }
