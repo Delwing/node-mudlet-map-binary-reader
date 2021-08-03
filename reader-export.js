@@ -140,6 +140,8 @@ module.exports = (map, directory) => {
     if (directory) {
         fs.writeFileSync(`${directory}/mapExport.js`, "mapData = " + JSON.stringify(mapData))
         fs.writeFileSync(`${directory}/colors.js`, "colors = " + JSON.stringify(generateColors(map.customEnvColors)))
+        fs.writeFileSync(`${directory}/mapExport.json`, JSON.stringify(mapData))
+        fs.writeFileSync(`${directory}/colors.json`, JSON.stringify(generateColors(map.customEnvColors)))
     }
 
     return mapData
