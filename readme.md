@@ -5,8 +5,6 @@ I am no Node developer, so any hints and suggestions are more then welcome.
 Usage example
 
 ```js
-const fs = require("fs")
-
 const input = "input_map.data"
 const outputDirectory = "output";
 
