@@ -68,8 +68,8 @@ function getLabel(label, directory) {
     label.Y = label.pos[1]
     label.Z = label.pos[2]
     delete label.pos
-    label.Width = label.size[1]
-    label.Height = label.size[0]
+    label.Width = label.size[0]
+    label.Height = label.size[1]
     delete label.size
     delete label.noScaling
     delete label.showOnTop
