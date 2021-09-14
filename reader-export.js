@@ -59,7 +59,7 @@ function getLabel(label, directory) {
         if (!fs.existsSync(`${directory}/labels`)) {
             fs.mkdirSync(`${directory}/labels`)
         }
-        fs.writeFileSync(`${directory}/labels/${label.areaId}-${label.labelId}.png`, label.pixMap);
+        fs.writeFileSync(`${directory}/labels/${label.areaId}-${label.labelId}.png`, Buffer.from(label.pixMap));
         delete label.pixMap;
     } else {
         label.pixMap = Buffer.from(label.pixMap).toString('base64');
@@ -68,8 +68,8 @@ function getLabel(label, directory) {
     label.Y = label.pos[1]
     label.Z = label.pos[2]
     delete label.pos
-    label.Height = label.size[0]
     label.Width = label.size[1]
+    label.Height = label.size[0]
     delete label.size
     delete label.noScaling
     delete label.showOnTop
@@ -131,7 +131,7 @@ module.exports = (map, directory) => {
           areaName: map.areaNames[key],
           areaId: key,
           rooms: element.rooms.map((element) => converRoom(map.rooms[element])),
-          labels : map.labels[key] ? map.labels[key].map((element) => getLabel(element)) : []
+          labels : map.labels[key] ? map.labels[key].map((element) => getLabel(element, directory)) : []
         };
         mapData.push(area);
       }
