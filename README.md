@@ -1,4 +1,4 @@
-# Node Mudlet Map Binary Reader
+# Mudlet Map Binary Reader
 
 Reads Mudlet's map binary file (v20 only!). Can output .js files needed for Mudlet Map Reader.
 Mudlet map JSON format is yet unsupported.
