@@ -1,12 +1,27 @@
 {
   "name": "mudlet-map-binary-reader",
   "version": "0.0.1",
+  "keywords": [
+    "mudlet",
+    "map",
+    "mud"
+  ],
+  "author": "Delwing",
   "license": "MIT",
   "repository": {
-      "url": "https://github.com/Delwing/node-mudlet-map-binary-reader"
+    "url": "git+https://github.com/Delwing/node-mudlet-map-binary-reader.git"
   },
   "dependencies": {
     "qtdatastream": "^1.1.0"
   },
-  "exports": "./export.js"
+  "exports": "./export.js",
+  "description": "Reads Mudlet's map binary file (v20 only!). Can output .js files needed for Mudlet Map Reader.\r Mudlet map JSON format is yet unsupported.",
+  "bugs": {
+    "url": "https://github.com/Delwing/node-mudlet-map-binary-reader/issues"
+  },
+  "homepage": "https://github.com/Delwing/node-mudlet-map-binary-reader#readme",
+  "directories": {
+    "example": "example"
+  },
+  "devDependencies": {}
 }

@@ -14,7 +14,8 @@ I am no Node developer, so any hints and suggestions are more then welcome.
 - [ ] Document classes
 - [ ] Add Mudlet's JSON exporter
 - [ ] Correct QFont read
-
+- [ ] Add test
+- [ ] Add linting
 ## Usage example
 
 ```js
