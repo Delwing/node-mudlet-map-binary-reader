@@ -176,7 +176,7 @@ function readRoom(buffer, id) {
   room.customLinesColor = readMap(buffer, QString.read, readQColor);
   room.customLinesStyle = readMap(buffer, QString.read, QUInt.read);
   room.exitLocks = readArray(buffer, QInt.read);
-  room.exitStubs = readArray(buffer, QInt.read);
+  room.stubs = readArray(buffer, QInt.read);
   room.exitWeights = readMap(buffer, QString.read, QInt.read);
   room.doors = readMap(buffer, QString.read, QInt.read);
   return room;
@@ -187,6 +187,9 @@ module.exports = (file) => {
   let buffer = new ReadBuffer(origBuffer);
 
   let mVersion = QUInt.read(buffer);
+  if (mVersion !== 20) {
+      throw new Error(`Map version ${mVersion} not supported.`)
+  }
   let mEnvColors = QMap.read(buffer);
   let areaNames = readMap(buffer, QInt.read, QString.read);
   let mCustomEnvColors = readMap(buffer, QInt.read, readQColor);

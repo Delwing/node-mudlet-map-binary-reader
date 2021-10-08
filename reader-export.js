@@ -71,6 +71,8 @@ function getLabel(label, directory) {
     label.Width = label.size[0]
     label.Height = label.size[1]
     delete label.size
+    label.Text = label.text
+    delete label.text
     delete label.noScaling
     delete label.showOnTop
     label.FgColor = label.fgColor
@@ -131,7 +133,7 @@ module.exports = (map, directory) => {
           areaName: map.areaNames[key],
           areaId: key,
           rooms: element.rooms.map((element) => converRoom(map.rooms[element])),
-          labels : map.labels[key] ? map.labels[key].map((element) => getLabel(element, directory)) : []
+          labels : map.labels[key] ? map.labels[key].map((element) => getLabel(element)) : []
         };
         mapData.push(area);
       }
