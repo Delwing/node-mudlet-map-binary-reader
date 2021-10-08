@@ -6,10 +6,10 @@ API until version `1.0.0` is subject to change! Use with caution.
 I am no Node developer, so any hints and suggestions are more then welcome.
 
 Plans:
-- [] Convert to .ts
-- [] Document map model
-- [] Document classes
-- [] Add Mudlet's JSON exporter
+- [ ] Convert to .ts
+- [ ] Document map model
+- [ ] Document classes
+- [ ] Add Mudlet's JSON exporter
 
 Usage example
 
