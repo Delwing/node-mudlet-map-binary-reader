@@ -190,7 +190,7 @@ module.exports = (file) => {
   if (mVersion !== 20) {
       throw new Error(`Map version ${mVersion} not supported.`)
   }
-  let mEnvColors = QMap.read(buffer);
+  let mEnvColors = readMap(buffer, QInt.read, QInt.read);
   let areaNames = readMap(buffer, QInt.read, QString.read);
   let mCustomEnvColors = readMap(buffer, QInt.read, readQColor);
   let mpRoomDbHashToRoomId = readMap(buffer, QString.read, QUInt.read);
