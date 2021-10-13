@@ -86,7 +86,8 @@ function getLabel(label, directory) {
     return label
 }
 
-function generateColors(customEnvColors) {
+function generateColors(map) {
+    let customEnvColors = map.customEnvColors
     let colors = {}
     for (let i = 0; i <= 255; i++) {
         if (i !== 16) {
@@ -108,6 +109,16 @@ function generateColors(customEnvColors) {
             delete element.alpha
             delete element.spec
             colors[key] = [element.r, element.g, element.b]
+        }
+    }
+
+    for (const key in map.envColors) {
+        if (Object.hasOwnProperty.call(map.envColors, key)) {
+            let element = map.envColors[key];
+            if (colors[key]) {
+                element = `ansi_${("00" + element).slice (-3)}`
+                colors[key] = mudletColors[element]
+            }
         }
     }
 
@@ -141,9 +152,9 @@ module.exports = (map, directory) => {
 
     if (directory) {
         fs.writeFileSync(`${directory}/mapExport.js`, "mapData = " + JSON.stringify(mapData))
-        fs.writeFileSync(`${directory}/colors.js`, "colors = " + JSON.stringify(generateColors(map.customEnvColors)))
+        fs.writeFileSync(`${directory}/colors.js`, "colors = " + JSON.stringify(generateColors(map)))
         fs.writeFileSync(`${directory}/mapExport.json`, JSON.stringify(mapData))
-        fs.writeFileSync(`${directory}/colors.json`, JSON.stringify(generateColors(map.customEnvColors)))
+        fs.writeFileSync(`${directory}/colors.json`, JSON.stringify(generateColors(map)))
     }
 
     return mapData

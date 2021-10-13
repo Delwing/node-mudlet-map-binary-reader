@@ -1,3 +1,7 @@
+# 0.0.3
+
+- adjust colors generation to adjust for envColors
+
 # 0.0.2
 
 - fix reading `mEnvColors`
