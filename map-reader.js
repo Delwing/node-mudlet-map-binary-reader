@@ -1,4 +1,4 @@
-const { QMap, QBool, QInt, QDouble, QUInt, QString, QShort } = require("qtdatastream").types;
+const { QBool, QInt, QDouble, QUInt, QString, QStringList, QMap } = require("qtdatastream").types;
 const { ReadBuffer } = require("qtdatastream").buffer;
 const fs = require("fs");
 
@@ -14,12 +14,44 @@ function readQColor(buffer) {
 }
 
 function readQFont(buffer) {
-  let font = {
-    family: QString.read(buffer),
-    style: QString.read(buffer),
-    pointSize: QDouble.read(buffer),
+  const family = QString.read(buffer);
+  const style = QString.read(buffer);
+  const pointSize = QDouble.read(buffer);
+  const pixelSize = QInt.read(buffer);
+  const styleHint = buffer.readInt8() >>> 0;
+  const styleStrategy = buffer.readUInt16BE() >> 8;
+  buffer.readInt8();
+  const weight = buffer.readInt8()>>>0;
+  const fontBits = buffer.readInt8()>>>0;
+  const stretch = buffer.readUInt16BE();
+  const extendedFontBits = buffer.readInt8()>>>0;
+  const letterSpacing = QInt.read(buffer);
+  const wordSpacing = QInt.read(buffer);
+  const hintingPreference = buffer.readInt8()>>>0;
+  const capital = buffer.readInt8()>>>0;
+  //QFont source has this as well, but the binary map doesn't?
+  //const families = QStringList.read(buffer);
+  const fudgeFactor = QDouble.read(buffer);
+  const useOnlyMapFont =QBool.read(buffer);
+  const font = {
+    family,
+    style,
+    pointSize,
+    pixelSize,
+    styleHint,
+    styleStrategy,
+    weight,
+    fontBits,
+    stretch,
+    extendedFontBits,
+    letterSpacing,
+    wordSpacing,
+    hintingPreference,
+    capital,
+    //families,
+    fudgeFactor,
+    useOnlyMapFont
   };
-  buffer.read_offset += 32; // QFont deserialization ???
   return font;
 }
 
