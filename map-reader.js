@@ -14,6 +14,8 @@ function readQColor(buffer) {
 }
 
 function readQFont(buffer) {
+  // extracted from the QFont source code
+  // Mudlet locks the QDataStream version to 5.12 for backwards compat
   const family = QString.read(buffer);
   const style = QString.read(buffer);
   const pointSize = QDouble.read(buffer);
@@ -29,10 +31,18 @@ function readQFont(buffer) {
   const wordSpacing = QInt.read(buffer);
   const hintingPreference = buffer.readInt8()>>>0;
   const capital = buffer.readInt8()>>>0;
-  //QFont source has this as well, but the binary map doesn't?
-  //const families = QStringList.read(buffer);
-  const fudgeFactor = QDouble.read(buffer);
-  const useOnlyMapFont =QBool.read(buffer);
+
+  const styleSetting = (fontBits & 0x01) !== 0;
+  const underline = (fontBits & 0x02) !== 0;
+  const overline = (fontBits & 0x40) !== 0;
+  const strikeOut = (fontBits & 0x04) !== 0;
+  const fixedPitch = (fontBits & 0x08) !== 0;
+  const kerning = (fontBits & 0x10) !== 0;
+  const styleOblique = (fontBits & 0x80) !== 0;
+
+  const ignorePitch = (extendedFontBits & 0x01) !== 0;
+  const letterSpacingIsAbsolute = (extendedFontBits & 0x02) !== 0;
+
   const font = {
     family,
     style,
@@ -48,9 +58,15 @@ function readQFont(buffer) {
     wordSpacing,
     hintingPreference,
     capital,
-    //families,
-    fudgeFactor,
-    useOnlyMapFont
+    styleSetting,
+    underline,
+    overline,
+    strikeOut,
+    fixedPitch,
+    kerning,
+    styleOblique,
+    ignorePitch,
+    letterSpacingIsAbsolute
   };
   return font;
 }
@@ -228,6 +244,8 @@ module.exports = (file) => {
   let mpRoomDbHashToRoomId = readMap(buffer, QString.read, QUInt.read);
   let mUserData = readMap(buffer, QString.read, QString.read);
   let mMapSymbolFont = readQFont(buffer);
+  const mapFontFudgeFactor = QDouble.read(buffer);
+  const useOnlyMapFont = QBool.read(buffer);
   let areaSize = QInt.read(buffer);
   let areas = {};
   for (let index = 0; index < areaSize; index++) {
@@ -276,5 +294,7 @@ module.exports = (file) => {
     areas: areas,
     areaNames: areaNames,
     roomIdHash: mRoomIdHash,
+    mapFontFudgeFactor,
+    useOnlyMapFont,
   };
 };
