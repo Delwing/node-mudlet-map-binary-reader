@@ -191,7 +191,7 @@ const convertStubExits = (stubs, doors) => {
     const stub = {
       name: direction,
       door:
-        room.doors[direction] !== undefined
+        doors[direction] !== undefined
           ? doorMap[doors[direction]]
           : undefined,
     };
