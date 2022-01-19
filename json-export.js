@@ -187,17 +187,20 @@ const convertStubExits = (stubs, doors) => {
   }
   const convertedStubs = [];
   for (const dirNum of stubs) {
-    const direction = directions[dirNum];
+    const direction = directions[dirNum - 1];
+    const shortDirection = directionShortNames[dirNum - 1];
     const stub = {
       name: direction,
       door:
-        doors[direction] !== undefined
-          ? doorMap[doors[direction]]
+        doors[shortDirection] !== undefined
+          ? doorMap[doors[shortDirection]]
           : undefined,
     };
     convertedStubs.push(stub);
   }
-  return stubs;
+  console.log(stubs)
+  console.log(convertedStubs)
+  return convertedStubs;
 };
 
 const convertLabel = (label) => {
