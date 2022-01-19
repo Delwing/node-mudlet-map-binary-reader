@@ -12,6 +12,7 @@
     "url": "git+https://github.com/Delwing/node-mudlet-map-binary-reader.git"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "qtdatastream": "^1.1.0"
   },
   "exports": "./export.js",
