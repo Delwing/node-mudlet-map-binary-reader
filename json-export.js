@@ -201,8 +201,6 @@ const convertStubExits = (stubs, doors) => {
     };
     convertedStubs.push(stub);
   }
-  console.log(stubs)
-  console.log(convertedStubs)
   return convertedStubs;
 };
 
