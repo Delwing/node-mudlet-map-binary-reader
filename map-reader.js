@@ -1,4 +1,4 @@
-const { QMap, QBool, QInt, QDouble, QUInt, QString, QShort } = require("qtdatastream").types;
+const { QBool, QInt, QDouble, QUInt, QString, QStringList, QMap } = require("qtdatastream").types;
 const { ReadBuffer } = require("qtdatastream").buffer;
 const fs = require("fs");
 
@@ -14,12 +14,60 @@ function readQColor(buffer) {
 }
 
 function readQFont(buffer) {
-  let font = {
-    family: QString.read(buffer),
-    style: QString.read(buffer),
-    pointSize: QDouble.read(buffer),
+  // extracted from the QFont source code
+  // Mudlet locks the QDataStream version to 5.12 for backwards compat
+  const family = QString.read(buffer);
+  const style = QString.read(buffer);
+  const pointSize = QDouble.read(buffer);
+  const pixelSize = QInt.read(buffer);
+  const styleHint = buffer.readInt8() >>> 0;
+  const styleStrategy = buffer.readUInt16BE() >> 8;
+  buffer.readInt8();
+  const weight = buffer.readInt8()>>>0;
+  const fontBits = buffer.readInt8()>>>0;
+  const stretch = buffer.readUInt16BE();
+  const extendedFontBits = buffer.readInt8()>>>0;
+  const letterSpacing = QInt.read(buffer);
+  const wordSpacing = QInt.read(buffer);
+  const hintingPreference = buffer.readInt8()>>>0;
+  const capital = buffer.readInt8()>>>0;
+
+  const styleSetting = (fontBits & 0x01) !== 0;
+  const underline = (fontBits & 0x02) !== 0;
+  const overline = (fontBits & 0x40) !== 0;
+  const strikeOut = (fontBits & 0x04) !== 0;
+  const fixedPitch = (fontBits & 0x08) !== 0;
+  const kerning = (fontBits & 0x10) !== 0;
+  const styleOblique = (fontBits & 0x80) !== 0;
+
+  const ignorePitch = (extendedFontBits & 0x01) !== 0;
+  const letterSpacingIsAbsolute = (extendedFontBits & 0x02) !== 0;
+
+  const font = {
+    family,
+    style,
+    pointSize,
+    pixelSize,
+    styleHint,
+    styleStrategy,
+    weight,
+    fontBits,
+    stretch,
+    extendedFontBits,
+    letterSpacing,
+    wordSpacing,
+    hintingPreference,
+    capital,
+    styleSetting,
+    underline,
+    overline,
+    strikeOut,
+    fixedPitch,
+    kerning,
+    styleOblique,
+    ignorePitch,
+    letterSpacingIsAbsolute
   };
-  buffer.read_offset += 32; // QFont deserialization ???
   return font;
 }
 
@@ -196,6 +244,8 @@ module.exports = (file) => {
   let mpRoomDbHashToRoomId = readMap(buffer, QString.read, QUInt.read);
   let mUserData = readMap(buffer, QString.read, QString.read);
   let mMapSymbolFont = readQFont(buffer);
+  const mapFontFudgeFactor = QDouble.read(buffer);
+  const useOnlyMapFont = QBool.read(buffer);
   let areaSize = QInt.read(buffer);
   let areas = {};
   for (let index = 0; index < areaSize; index++) {
@@ -244,5 +294,7 @@ module.exports = (file) => {
     areas: areas,
     areaNames: areaNames,
     roomIdHash: mRoomIdHash,
+    mapFontFudgeFactor,
+    useOnlyMapFont,
   };
 };
