@@ -1,3 +1,6 @@
+# 0.0.4
+- export map to Mudlet JSON map file
+
 # 0.0.3
 
 - adjust colors generation to adjust for envColors
