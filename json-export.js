@@ -267,13 +267,16 @@ const convertColor = (color) => {
 
 const convertMapSymbolInfo = (map, convertedObject) => {
   const f = map.mapSymbolFont;
+  const firstFamilyComma = f.family.indexOf(',');
+  const family =
+    firstFamilyComma > -1 ? f.family.substr(0, firstFamilyComma) : f.family;
   // the string produced by the QFont source does not seem to match the one in the QFont::toString() documentation as it's missing some values
   // However, the source code string seems to match what is in our JSON so we reproduce that.
-  const fontString = `${f.family},${f.pointSize},${f.pixelSize},${
-    f.styleHint
-  },${f.weight},${f.styleSetting ? 1 : 0},${f.underline ? 1 : 0},${
-    f.strikeOut ? 1 : 0
-  },${f.fixedPitch ? 1 : 0},0`;
+  const fontString = `${family},${f.pointSize},${f.pixelSize},${f.styleHint},${
+    f.weight
+  },${f.styleSetting ? 1 : 0},${f.underline ? 1 : 0},${f.strikeOut ? 1 : 0},${
+    f.fixedPitch ? 1 : 0
+  },0`;
 
   convertedObject.mapSymbolFontDetails = fontString;
   convertedObject.mapSymbolFontFudgeFactor = map.mapFontFudgeFactor;
