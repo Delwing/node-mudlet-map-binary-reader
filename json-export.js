@@ -224,7 +224,7 @@ const chunkString = (str, length) => {
 const addMapStatistics = (map, convertedObject) => {
   convertedObject.areaCount = Object.keys(map.areas).length;
   convertedObject.roomCount = Object.keys(map.rooms).length;
-  convertedObject.labelCount = Object.keys(map.labels).length;
+  convertedObject.labelCount = _.flatMap(map.labels, (label) => label).length;
 };
 
 // currently not in the binary map
