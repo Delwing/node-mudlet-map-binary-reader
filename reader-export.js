@@ -138,7 +138,7 @@ function generateColors(map) {
 }
 
 module.exports = (mapModel, directory) => {
-    map = _.cloneDeep(mapModel);
+    let map = _.cloneDeep(mapModel);
     let mapData = [];
     for (const key in map.areas) {
       if (Object.hasOwnProperty.call(map.areas, key)) {
