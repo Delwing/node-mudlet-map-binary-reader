@@ -21,8 +21,5 @@
     "url": "https://github.com/Delwing/node-mudlet-map-binary-reader/issues"
   },
   "homepage": "https://github.com/Delwing/node-mudlet-map-binary-reader#readme",
-  "directories": {
-    "example": "example"
-  },
   "devDependencies": {}
 }
