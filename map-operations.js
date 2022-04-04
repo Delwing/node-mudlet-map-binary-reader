@@ -1,9 +1,8 @@
 const { ReadBuffer } = require("qtdatastream").buffer;
-const { QUserType } = require("./types/mudlet-models");
+const { QUserType } = require("./models/mudlet-models");
 const fs = require("fs");
 
 function writeMap(map, file) {
-
     for (const roomId in map.rooms) {
         let rawSpecialExits = {}
         const room = map.rooms[roomId]
@@ -23,6 +22,11 @@ function writeMap(map, file) {
   fs.writeFileSync(file, QUserType.get("MudletMap").from(map).toBuffer(true));
 }
 
+/**
+ * 
+ * @param {string} file 
+ * @returns {Mudlet.MudletMap}
+ */
 function readMap(file) {
   let buffer = new ReadBuffer(fs.readFileSync(file));
   let map = QUserType.read(buffer, "MudletMap");
