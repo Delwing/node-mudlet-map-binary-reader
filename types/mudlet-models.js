@@ -70,7 +70,7 @@ QUserType.register("MudletRoom", [
   { weight: Types.INT },
   { name: Types.STRING },
   { isLocked: Types.BOOL },
-  { mSpecialExits: QMap(QUInt, QString) },
+  { rawSpecialExits: QMultiMap(QUInt, QString) },
   { symbol: Types.STRING },
   { userData: QMap(QString, QString) },
   { customLines: QMap(QString, QList(QPoint)) },
