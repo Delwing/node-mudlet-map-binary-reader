@@ -1,4 +1,6 @@
 const fs = require("fs");
+const _ = require('lodash');
+
 const roomExits = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down", "in", "out"];
 const penStyles = {
     1 : "solid line",
@@ -135,7 +137,8 @@ function generateColors(map) {
     return output
 }
 
-module.exports = (map, directory) => {
+module.exports = (mapModel, directory) => {
+    let map = _.cloneDeep(mapModel);
     let mapData = [];
     for (const key in map.areas) {
       if (Object.hasOwnProperty.call(map.areas, key)) {

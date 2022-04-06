@@ -1,3 +1,6 @@
+# 0.0.5
+- clone map model before doing export to prevent any changes to original model so it can be reused
+
 # 0.0.4
 - export map to Mudlet JSON map file
 
