@@ -10,7 +10,7 @@ I am no Node developer, so any hints and suggestions are more then welcome.
 ## TODOs and plans
 
 - [ ] Convert to .ts
-- [ ] Document map model
+- [X] Document map model
 - [ ] Document classes
 - [X] Add Mudlet's JSON exporter
 - [X] Correct QFont read
@@ -25,5 +25,15 @@ const inputFile = "map.data"
 const outputDirectory = "output";
 
 let mapModel = MudletMapReader.read(inputFile);
+
+// Export to map renderer format https://github.com/Delwing/js-mudlet-map-renderer
 let mudletMapReaderFormat = MudletMapReader.export(mapModel, outputDirectory);
+
+// Export as Mudlet Json map
+const outputFile = 'file.json'
+let mudletJsonFormat = MudletMapReader.exportJson(mapModel, outputFile)
+
+//Modify and save binary
+mapModel.rooms[1].name = "Funny name!"
+MudletMapReader.write(mapModel, inputFile)
 ```

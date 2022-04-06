@@ -1,3 +1,9 @@
+# 0.1.0
+- code reorganization
+- reading will now be based directly on qtdatastream user type
+- added write method - it is now possible to write Mudlet map into binary from its model
+- model map definition
+
 # 0.0.5
 - clone map model before doing export to prevent any changes to original model so it can be reused
 

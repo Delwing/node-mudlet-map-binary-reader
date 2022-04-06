@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+buffertrim@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/buffertrim/-/buffertrim-1.0.0.tgz#db50a1018958c1ff15063047f8c9ee0759519c1f"
+  integrity sha1-21ChAYlYwf8VBjBH+MnuB1lRnB8=
+
 debug@^4.1.1:
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.2.tgz#f0a49c18ac8779e31d4a0c6029dfb76873c7428b"
