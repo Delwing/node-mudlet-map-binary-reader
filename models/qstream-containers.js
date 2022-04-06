@@ -6,6 +6,16 @@ let customMultiMapCache = {};
 let customArrayCache = {};
 let customPairCache = {};
 
+function mudletSorter(a,b) {
+    if (parseInt(a[0]) === -1) {
+        return -1;
+    }
+    if (parseInt(b[0]) === -1) {
+        return 1;
+    }
+    return a[0] - b[0];
+}
+
 function QMultiMap(keyClass, valueClass) {
   if (!keyClass.qtype) {
     keyClass = QClass.types.get(keyClass);
@@ -92,7 +102,7 @@ function createTypedMap(keyClass, valueClass) {
         } else {
           const entries = Object.entries(this.__obj);
           bufs.push(QUInt.from(entries.length).toBuffer());
-          for (const [key, value] of entries.reverse()) {
+          for (const [key, value] of entries.sort(mudletSorter)) {
             bufs.push(keyClass.from(key).toBuffer());
             bufs.push(valueClass.from(value).toBuffer());
           }
@@ -134,6 +144,7 @@ function createTypedList(valueClass) {
       }
       return map;
     }
+    
     toBuffer() {
       const bufs = [];
       bufs.push(QUInt.from(this.__obj.length).toBuffer());

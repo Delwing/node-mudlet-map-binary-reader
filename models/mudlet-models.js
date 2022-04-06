@@ -101,7 +101,7 @@ QUserType.register("MudletLabel", [
 QUserType.register("MudletMap", [
   { version: Types.INT },
   { envColors: QMap(QInt, QInt) },
-  { areaNames: QMap(QInt, QString) },
+  { areaNames: QMap(QInt, QString, true) },
   { mCustomEnvColors: QMap(QInt, QColor) },
   { mpRoomDbHashToRoomId: QMap(QString, QUInt) },
   { mUserData: QMap(QString, QString) },

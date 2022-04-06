@@ -1,5 +1,5 @@
 declare namespace Mudlet {
-  export interface MudletMap {
+  interface MudletMap {
     version: number;
     envColors: Record<number, number>;
     areaNames: Record<number, string>;
@@ -19,7 +19,7 @@ declare namespace Mudlet {
 interface MudletArea {
   rooms: Array<number>;
   zLevels: Array<number>;
-  mAreaExits: Record<number, Array<Array<number, number>>>;
+  mAreaExits: Record<number, Array<Array<number>>>
   gridMode: boolean;
   max_x: number;
   max_y: number;
