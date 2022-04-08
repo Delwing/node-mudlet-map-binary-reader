@@ -9,7 +9,8 @@ const penStyles = {
 }
 const mudletColors = require("./mudlet-colors.json")
 
-function converRoom(room) {
+function convertRoom(roomId, room) {
+    room.id = roomId
   if (room.environment) {
     room.env = room.environment;
     delete room.environment;
@@ -66,6 +67,8 @@ function getLabel(label, directory) {
     } else {
         label.pixMap = Buffer.from(label.pixMap).toString('base64');
     }
+    delete label.dummy1
+    delete label.dummy2
     label.X = label.pos[0]
     label.Y = label.pos[1]
     label.Z = label.pos[2]
@@ -89,7 +92,7 @@ function getLabel(label, directory) {
 }
 
 function generateColors(map) {
-    let customEnvColors = map.customEnvColors
+    let customEnvColors = map.mCustomEnvColors
     let colors = {}
     for (let i = 0; i <= 255; i++) {
         if (i !== 16) {
@@ -114,6 +117,7 @@ function generateColors(map) {
         }
     }
 
+    console.log(map.envColors)
     for (const key in map.envColors) {
         if (Object.hasOwnProperty.call(map.envColors, key)) {
             let element = map.envColors[key];
@@ -129,7 +133,7 @@ function generateColors(map) {
         if (Object.hasOwnProperty.call(colors, key)) {
             const element = colors[key];
             output.push({
-                envId: key,
+                envId: parseInt(key),
                 colors: element
             })
         }
@@ -146,7 +150,7 @@ module.exports = (mapModel, directory) => {
         let area = {
           areaName: map.areaNames[key],
           areaId: key,
-          rooms: element.rooms.map((element) => converRoom(map.rooms[element])),
+          rooms: element.rooms.map((roomId) => convertRoom(roomId, map.rooms[roomId])),
           labels : map.labels[key] ? map.labels[key].map((element) => getLabel(element)) : []
         };
         mapData.push(area);
