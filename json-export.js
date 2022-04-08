@@ -246,7 +246,7 @@ const convertPlayerRooms = (map, convertedObject) => {
 };
 
 const convertCustomEnvironmentColours = (map, convertedObject) => {
-  const colors = _.map(map.customEnvColors, (color, index) => {
+  const colors = _.map(map.mCustomEnvColors, (color, index) => {
     const convertedColor = convertColor(color);
     convertedColor.id = parseInt(index);
     return convertedColor;
