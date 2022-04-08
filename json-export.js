@@ -59,10 +59,10 @@ const convertMapToMudletFormat = (map) => {
 };
 
 const convertUserData = (map, convertedObject) => {
-  if (_.isEmpty(map.userData)) {
+  if (_.isEmpty(map.mUserData)) {
     return;
   }
-  convertedObject.userData = map.userData;
+  convertedObject.userData = map.mUserData;
 };
 
 const convertAreas = (map, convertedObject) => {
@@ -72,7 +72,7 @@ const convertAreas = (map, convertedObject) => {
 
 const convertArea = (area, areaid, map) => {
   const convertedArea = {
-    id: areaid,
+    id: parseInt(areaid),
     name: map.areaNames[areaid] || '',
     gridMode: area.gridMode ? true : undefined,
     roomCount: area.rooms.length,
@@ -242,11 +242,11 @@ const convertEnvironmentColors = (map, convertedObject) => {
 };
 
 const convertPlayerRooms = (map, convertedObject) => {
-  convertedObject.playersRoomId = map.roomIdHash;
+  convertedObject.playersRoomId = map.mRoomIdHash;
 };
 
 const convertCustomEnvironmentColours = (map, convertedObject) => {
-  const colors = _.map(map.customEnvColors, (color, index) => {
+  const colors = _.map(map.mCustomEnvColors, (color, index) => {
     const convertedColor = convertColor(color);
     convertedColor.id = parseInt(index);
     return convertedColor;
