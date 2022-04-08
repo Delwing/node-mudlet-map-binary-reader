@@ -1,3 +1,6 @@
+# 0.1.1
+- fix json export
+
 # 0.1.0
 - code reorganization
 - reading will now be based directly on qtdatastream user type
