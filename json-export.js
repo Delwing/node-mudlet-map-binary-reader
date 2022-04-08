@@ -242,7 +242,7 @@ const convertEnvironmentColors = (map, convertedObject) => {
 };
 
 const convertPlayerRooms = (map, convertedObject) => {
-  convertedObject.playersRoomId = map.roomIdHash;
+  convertedObject.playersRoomId = map.mRoomIdHash;
 };
 
 const convertCustomEnvironmentColours = (map, convertedObject) => {
