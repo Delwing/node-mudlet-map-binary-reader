@@ -59,10 +59,10 @@ const convertMapToMudletFormat = (map) => {
 };
 
 const convertUserData = (map, convertedObject) => {
-  if (_.isEmpty(map.userData)) {
+  if (_.isEmpty(map.mUserData)) {
     return;
   }
-  convertedObject.userData = map.userData;
+  convertedObject.userData = map.mUserData;
 };
 
 const convertAreas = (map, convertedObject) => {
