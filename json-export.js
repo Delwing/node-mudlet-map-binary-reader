@@ -72,7 +72,7 @@ const convertAreas = (map, convertedObject) => {
 
 const convertArea = (area, areaid, map) => {
   const convertedArea = {
-    id: areaid,
+    id: parseInt(areaid),
     name: map.areaNames[areaid] || '',
     gridMode: area.gridMode ? true : undefined,
     roomCount: area.rooms.length,
