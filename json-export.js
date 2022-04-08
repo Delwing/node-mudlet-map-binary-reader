@@ -90,7 +90,7 @@ const convertArea = (area, map) => {
 const convertRoom = (roomId, map) => {
   const room = map.rooms[roomId];
   const convertedRoom = {
-    id: room.id,
+    id: roomId,
     name: room.name !== '' ? room.name : undefined,
     coordinates: [room.x, room.y, room.z],
     locked: room.isLocked ? true : undefined,
