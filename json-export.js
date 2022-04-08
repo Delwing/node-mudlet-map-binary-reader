@@ -66,14 +66,14 @@ const convertUserData = (map, convertedObject) => {
 };
 
 const convertAreas = (map, convertedObject) => {
-  const convertedAreas = _.map(map.areas, (area) => convertArea(area, map));
+  const convertedAreas = _.map(map.areas, (area, areaid) => convertArea(area, areaid, map));
   convertedObject.areas = convertedAreas;
 };
 
-const convertArea = (area, map) => {
+const convertArea = (area, areaid, map) => {
   const convertedArea = {
-    id: area.id,
-    name: map.areaNames[area.id] || '',
+    id: areaid,
+    name: map.areaNames[areaid] || '',
     gridMode: area.gridMode ? true : undefined,
     roomCount: area.rooms.length,
     rooms: _.map(area.rooms, (roomId) => convertRoom(roomId, map)),
@@ -81,8 +81,8 @@ const convertArea = (area, map) => {
   if (!_.isEmpty(area.userData)) {
     convertedArea.userData = area.userData;
   }
-  if (!_.isEmpty(map.labels[area.id])) {
-    convertedArea.labels = _.map(map.labels[area.id], convertLabel);
+  if (!_.isEmpty(map.labels[areaid])) {
+    convertedArea.labels = _.map(map.labels[areaid], convertLabel);
   }
   return convertedArea;
 };
