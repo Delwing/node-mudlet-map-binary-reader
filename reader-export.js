@@ -117,7 +117,6 @@ function generateColors(map) {
         }
     }
 
-    console.log(map.envColors)
     for (const key in map.envColors) {
         if (Object.hasOwnProperty.call(map.envColors, key)) {
             let element = map.envColors[key];
