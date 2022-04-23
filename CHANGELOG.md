@@ -1,3 +1,6 @@
+# 0.1.2
+- furhter exporting fixes
+
 # 0.1.1
 - fix json export
 
