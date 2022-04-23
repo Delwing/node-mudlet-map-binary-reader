@@ -1,3 +1,8 @@
+# 0.2.0
+- export for reader will export model and colors
+- document export function
+- package.json - switch "export" to "main"
+
 # 0.1.2
 - furhter exporting fixes
 

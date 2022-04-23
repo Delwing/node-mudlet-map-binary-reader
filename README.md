@@ -19,15 +19,15 @@ I am no Node developer, so any hints and suggestions are more then welcome.
 ## Usage example
 
 ```js
-const { MudletMapReader } = require("mudlet-map-reader");
+const { MudletMapReader } = require("mudlet-map-binary-reader");
 
-const inputFile = "map.data"
+const inputFile = "map.dat"
 const outputDirectory = "output";
 
 let mapModel = MudletMapReader.read(inputFile);
 
-// Export to map renderer format https://github.com/Delwing/js-mudlet-map-renderer
-let mudletMapReaderFormat = MudletMapReader.export(mapModel, outputDirectory);
+// Export to map renderer format and save to .js and .json files https://github.com/Delwing/js-mudlet-map-renderer
+let { mudletMap, colors } = MudletMapReader.export(mapModel, outputDirectory);
 
 // Export as Mudlet Json map
 const outputFile = 'file.json'

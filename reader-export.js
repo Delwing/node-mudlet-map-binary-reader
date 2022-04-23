@@ -140,6 +140,13 @@ function generateColors(map) {
     return output
 }
 
+/**
+ * Exports model into format understandable by JS Mudlet Map Renderer - https://github.com/Delwing/js-mudlet-map-renderer
+ * 
+ * @param {Mudlet.MudletMap} mapModel
+ * @param {string} [directory] Directory path, if provided will store export as .js and .json files as well
+ * @returns {{mapData: object, colors: {envId: number, colors: number[]}}}
+ */
 module.exports = (mapModel, directory) => {
     let map = _.cloneDeep(mapModel);
     let mapData = [];
@@ -156,13 +163,15 @@ module.exports = (mapModel, directory) => {
       }
     }
 
+    let colors = generateColors(map);
+
     if (directory) {
         fs.writeFileSync(`${directory}/mapExport.js`, "mapData = " + JSON.stringify(mapData))
-        fs.writeFileSync(`${directory}/colors.js`, "colors = " + JSON.stringify(generateColors(map)))
+        fs.writeFileSync(`${directory}/colors.js`, "colors = " + JSON.stringify(colors))
         fs.writeFileSync(`${directory}/mapExport.json`, JSON.stringify(mapData))
-        fs.writeFileSync(`${directory}/colors.json`, JSON.stringify(generateColors(map)))
+        fs.writeFileSync(`${directory}/colors.json`, JSON.stringify(colors))
     }
 
-    return mapData
+    return { mapData: mapData, colors: colors }
 }
 
