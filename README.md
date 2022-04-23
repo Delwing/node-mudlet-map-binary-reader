@@ -1,5 +1,7 @@
 # Mudlet Map Binary Reader
 
+[![NPM](https://nodei.co/npm/mudlet-map-binary-reader.png)](https://nodei.co/npm/mudlet-map-binary-reader/)
+
 Reads Mudlet's map binary file (v20 only!). Can output .js files needed for Mudlet Map Reader.
 Mudlet map JSON format is yet unsupported.
 
