@@ -60,7 +60,7 @@ interface MudletRoom {
   name: string;
   isLocked: boolean;
   mSpecialExits: Record<string, number>;
-  mSpecialExitLock: Array<number>;
+  mSpecialExitLocks: Array<number>;
   symbol: string;
   userData: Record<string, string>;
   customLines: Record<string, Array<Array<number>>>;
