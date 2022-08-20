@@ -1,3 +1,6 @@
+# 0.2.1
+- fix typo in .ts definition
+
 # 0.2.0
 - export for reader will export model and colors
 - document export function
