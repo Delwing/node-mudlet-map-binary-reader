@@ -200,7 +200,7 @@ class QPixMap extends QClass {
   }
 
   toBuffer() {
-    return Buffer.concat([QUInt.from(1).toBuffer(), this.__obj]);
+    return Buffer.concat([QUInt.from(1).toBuffer(), this.__obj !== '' ? this.__obj : Buffer.from('')])
   }
 }
 
