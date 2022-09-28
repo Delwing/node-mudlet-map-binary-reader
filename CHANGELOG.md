@@ -1,3 +1,6 @@
+# 0.4.0
+- fix errors when pixmap is empty
+
 # 0.2.1
 - fix typo in .ts definition
 
