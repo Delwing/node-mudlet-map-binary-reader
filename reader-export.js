@@ -9,7 +9,7 @@ const penStyles = {
 }
 const mudletColors = require("./mudlet-colors.json")
 
-function convertRoom(roomId, room) {
+function convertRoom(roomId, room, hash) {
     room.id = roomId
   if (room.environment) {
     room.env = room.environment;
@@ -54,6 +54,9 @@ function convertRoom(roomId, room) {
   delete room.customLinesArrow
   delete room.customLinesColor
   delete room.customLinesStyle
+  if (hash) {
+    room.hash = hash;
+  }
   return room;
 }
 
@@ -150,13 +153,14 @@ function generateColors(map) {
 module.exports = (mapModel, directory) => {
     let map = _.cloneDeep(mapModel);
     let mapData = [];
+    let roomToHash = Object.entries(map.mpRoomDbHashToRoomId).reduce((acc, [key, value]) => (acc[value] = key, acc), {})
     for (const key in map.areas) {
       if (Object.hasOwnProperty.call(map.areas, key)) {
         const element = map.areas[key];
         let area = {
           areaName: map.areaNames[key],
           areaId: key,
-          rooms: element.rooms.map((roomId) => convertRoom(roomId, map.rooms[roomId])),
+          rooms: element.rooms.map((roomId) => convertRoom(roomId, map.rooms[roomId], roomToHash[roomId])),
           labels : map.labels[key] ? map.labels[key].map((element) => getLabel(element)) : []
         };
         mapData.push(area);
