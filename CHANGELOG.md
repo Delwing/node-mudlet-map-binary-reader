@@ -1,3 +1,6 @@
+# 0.5.0
+- add room hash to reader export
+
 # 0.4.0
 - fix errors when pixmap is empty
 
