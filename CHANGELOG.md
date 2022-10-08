@@ -1,3 +1,6 @@
+# 0.5.1
+- correct docs picking up
+
 # 0.5.0
 - add room hash to reader export
 
