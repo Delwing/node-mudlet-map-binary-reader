@@ -15,12 +15,10 @@
     "lodash": "^4.17.21",
     "qtdatastream": "^1.1.0"
   },
-  "main": "./export.js",
+  "main": "./index.js",
   "description": "Reads Mudlet's map binary file (v20 only!). Can output .js files needed for Mudlet Map Reader.\r Mudlet map JSON format is yet unsupported.",
   "bugs": {
     "url": "https://github.com/Delwing/node-mudlet-map-binary-reader/issues"
   },
-  "homepage": "https://github.com/Delwing/node-mudlet-map-binary-reader#readme",
-  "devDependencies": {},
-  "typings": "./types/map.d.ts"
+  "homepage": "https://github.com/Delwing/node-mudlet-map-binary-reader#readme"
 }
