@@ -1,3 +1,6 @@
+# 0.5.2
+- correct exports (so they will not break backward compatibility)
+
 # 0.5.1
 - correct docs picking up
 
