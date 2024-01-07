@@ -136,7 +136,7 @@ const convertRoom = (roomId, map) => {
       weight: getExitWeight(specialExit, room.exitWeights, 1),
       locked: _.find(
         room.mSpecialExitLocks,
-        (exitCommand) => specialExit === exitCommand
+        (destinationRoom) => room.mSpecialExits[specialExit] === destinationRoom
       )
         ? true
         : undefined,
