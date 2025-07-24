@@ -26,19 +26,16 @@ function convertRoom(roomId, room, hash) {
       }
       delete room[key]
   })
-  delete isLocked
   room.specialExits = room.mSpecialExits
   delete room.mSpecialExits
-  delete room.mSpecialExitLocks
-  delete room.exitWeights
-  delete room.exitLocks
-  delete room.isLocked
   for (const key in room.customLines) {
       if (Object.hasOwnProperty.call(room.customLines, key)) {
           const element = room.customLines[key];
-          let line = {
-              points: element.map(points => {return {x: points[0], y : points[1]}}),
-              attributes : {
+          room.customLines[key] = {
+              points: element.map(points => {
+                  return {x: points[0], y: points[1]}
+              }),
+              attributes: {
                   color: {
                       r: room.customLinesColor[key].r,
                       g: room.customLinesColor[key].g,
@@ -48,7 +45,6 @@ function convertRoom(roomId, room, hash) {
                   arrow: room.customLinesArrow[key]
               }
           }
-          room.customLines[key] = line
       }
   }
   delete room.customLinesArrow
@@ -101,7 +97,7 @@ function generateColors(map) {
         if (i !== 16) {
             let key = `ansi_${("00" + i).slice (-3)}`
             let envId
-            if (i == 0 || i == 8) {
+            if (i === 0 || i === 8) {
                 envId = i + 8
             } else {
                 envId = i

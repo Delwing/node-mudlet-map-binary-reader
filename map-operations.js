@@ -55,7 +55,7 @@ function writeMap(map, file) {
       for (const exit in room.mSpecialExits) {
           if (Object.hasOwnProperty.call(room.mSpecialExits, exit)) {
               const exRoomId = room.mSpecialExits[exit];
-              if (rawSpecialExits[exRoomId] == undefined) {
+              if (rawSpecialExits[exRoomId] === undefined) {
                   rawSpecialExits[exRoomId] = []
               }
               rawSpecialExits[exRoomId].push((room.mSpecialExitLocks.indexOf(exRoomId) > -1 ? "1" : "0") + exit)

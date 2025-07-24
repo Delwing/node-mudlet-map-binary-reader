@@ -1,3 +1,6 @@
+# 0.6.0
+- json export will not remove pathwalking locks
+
 # 0.5.2
 - correct exports (so they will not break backward compatibility)
 
