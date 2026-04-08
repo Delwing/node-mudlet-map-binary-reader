@@ -51,6 +51,7 @@ const makeMinimalRoom = (id, areaId = 1) => ({
   isLocked: false,
   mSpecialExits: {},
   mSpecialExitLocks: [],
+  // rawSpecialExits is intentionally absent: writeMap derives it from mSpecialExits before serializing
   symbol: '',
   userData: {},
   customLines: {},
@@ -64,7 +65,7 @@ const makeMinimalRoom = (id, areaId = 1) => ({
 });
 
 const makeMinimalArea = (roomIds) => ({
-  rooms: roomIds,
+  rooms: [...roomIds],
   zLevels: [0],
   mAreaExits: {},
   gridMode: false,
@@ -111,7 +112,10 @@ const makeMapWithSpecialExits = () => {
   return map;
 };
 
-// Room with custom lines (uses 'north' key — for reader-export which iterates keys freely)
+// Room with custom lines. Uses 'north' key — reader-export iterates keys freely.
+// Style 1 = 'solid line' in reader-export's penStyles.
+// Do NOT pass this fixture to json-export tests: json-export uses short direction names ('n')
+// and its lineStyles map starts at 2, so style 1 would produce undefined.
 const makeMapWithCustomLines = () => {
   const map = makeMinimalMap();
   map.rooms[1].customLines = { north: [[0.0, 0.0], [1.0, 1.0]] };
