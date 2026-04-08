@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { randomUUID } = require('crypto');
 const { MudletMapReader } = require('../index');
-const { makeMinimalMap } = require('./fixtures');
+const { makeMinimalMap, makeMapWithSpecialExits } = require('./fixtures');
 
 describe('readMap / writeMap round-trip', () => {
   let tmpFile;
@@ -38,5 +38,31 @@ describe('readMap / writeMap round-trip', () => {
       mSpecialExits: {},
       mSpecialExitLocks: [],
     });
+  });
+
+  test('special exits and locks survive write → read', () => {
+    const input = makeMapWithSpecialExits();
+    // room 1 has 'open door' → 99 (unlocked), 'push lever' → 100 (locked)
+
+    MudletMapReader.write(input, tmpFile);
+    const result = MudletMapReader.read(tmpFile);
+
+    expect(result.rooms[1].mSpecialExits).toEqual({
+      'open door': 99,
+      'push lever': 100,
+    });
+    expect(result.rooms[1].mSpecialExitLocks).toEqual([100]);
+  });
+
+  test('unlocked special exit has no entry in mSpecialExitLocks', () => {
+    const input = makeMinimalMap();
+    input.rooms[1].mSpecialExits = { 'enter portal': 99 };
+    input.rooms[1].mSpecialExitLocks = [];
+
+    MudletMapReader.write(input, tmpFile);
+    const result = MudletMapReader.read(tmpFile);
+
+    expect(result.rooms[1].mSpecialExits).toEqual({ 'enter portal': 99 });
+    expect(result.rooms[1].mSpecialExitLocks).toEqual([]);
   });
 });
