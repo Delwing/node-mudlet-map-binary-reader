@@ -3,7 +3,7 @@
 jest.mock('fs');
 const fs = require('fs');
 const exportMap = require('../json-export');
-const { makeMinimalMap, makeMinimalColor } = require('./fixtures');
+const { makeMinimalMap, makeMultiAreaMap } = require('./fixtures');
 
 function getWrittenJson() {
   expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
@@ -23,10 +23,12 @@ describe('json-export', () => {
     });
 
     test('areaCount and roomCount are correct', () => {
-      exportMap(makeMinimalMap(), '/tmp/out.json');
+      // Use makeMultiAreaMap (2 areas, 3 rooms) so areaCount !== roomCount
+      // and a swapped implementation would fail
+      exportMap(makeMultiAreaMap(), '/tmp/out.json');
       const result = getWrittenJson();
-      expect(result.areaCount).toBe(1);
-      expect(result.roomCount).toBe(1);
+      expect(result.areaCount).toBe(2);
+      expect(result.roomCount).toBe(3);
     });
 
     test('mapSymbolFontDetails encodes font fields as comma-separated string', () => {
