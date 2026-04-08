@@ -3,6 +3,7 @@
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
+const { randomUUID } = require('crypto');
 const { MudletMapReader } = require('../index');
 const { makeMinimalMap } = require('./fixtures');
 
@@ -10,7 +11,7 @@ describe('readMap / writeMap round-trip', () => {
   let tmpFile;
 
   beforeEach(() => {
-    tmpFile = path.join(os.tmpdir(), `mudlet-test-${Date.now()}.dat`);
+    tmpFile = path.join(os.tmpdir(), `mudlet-test-${randomUUID()}.dat`);
   });
 
   afterEach(() => {
