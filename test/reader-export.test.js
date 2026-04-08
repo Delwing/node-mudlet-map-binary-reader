@@ -82,7 +82,9 @@ describe('reader-export', () => {
   describe('color generation', () => {
     test('generates 255 standard ANSI color entries', () => {
       const { colors } = readerExport(makeMinimalMap());
-      // 256 entries minus envId 16 (skipped in the loop) = 255
+      // Loop runs i=0..255, skipping i=16 (ansi_016 is never mapped).
+      // i=0 and i=8 remap to envIds 8 and 16 respectively, so no envId slot is lost.
+      // Total: 255 entries.
       const stdEntries = colors.filter(c => c.envId <= 255);
       expect(stdEntries.length).toBe(255);
     });
