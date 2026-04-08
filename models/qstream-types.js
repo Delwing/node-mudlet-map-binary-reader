@@ -133,7 +133,7 @@ class QFont extends QClass {
 
     let bufUInt16BE = (el) => {
       let buf = Buffer.alloc(2);
-      buf.writeUint16BE(el << 8);
+      buf.writeUint16BE(el);
       return buf;
     };
 
