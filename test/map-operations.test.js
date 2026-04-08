@@ -51,7 +51,9 @@ describe('readMap / writeMap round-trip', () => {
       'open door': 99,
       'push lever': 100,
     });
-    expect(result.rooms[1].mSpecialExitLocks).toEqual([100]);
+    expect(result.rooms[1].mSpecialExitLocks).toEqual(expect.arrayContaining([100]));
+    expect(result.rooms[1].mSpecialExitLocks).toHaveLength(1);
+    expect(result.rooms[1].mSpecialExitLocks).not.toContain(99);
   });
 
   test('unlocked special exit has no entry in mSpecialExitLocks', () => {
