@@ -3,7 +3,7 @@
 jest.mock('fs');
 const fs = require('fs');
 const readerExport = require('../reader-export');
-const { makeMinimalMap, makeMinimalColor, makeMapWithCustomLines } = require('./fixtures');
+const { makeMinimalMap, makeMinimalColor, makeMapWithCustomLines, makeMapWithLabels } = require('./fixtures');
 const mudletColors = require('../mudlet-colors.json');
 
 describe('reader-export', () => {
@@ -76,6 +76,38 @@ describe('reader-export', () => {
           arrow: true,
         },
       });
+    });
+  });
+
+  describe('label conversion', () => {
+    test('label fields are remapped to uppercase keys', () => {
+      const { mapData } = readerExport(makeMapWithLabels());
+      const label = mapData[0].labels[0];
+
+      expect(label.Text).toBe('Test Label');
+      expect(label.X).toBe(0);
+      expect(label.Y).toBe(0);
+      expect(label.Z).toBe(0);
+      expect(label.Width).toBe(100);
+      expect(label.Height).toBe(50);
+    });
+
+    test('label pixMap is base64-encoded (empty string for empty pixMap)', () => {
+      const { mapData } = readerExport(makeMapWithLabels());
+      const label = mapData[0].labels[0];
+
+      // Buffer.from('').toString('base64') === ''
+      expect(label.pixMap).toBe('');
+    });
+
+    test('label colors have spec and pad removed', () => {
+      const { mapData } = readerExport(makeMapWithLabels());
+      const label = mapData[0].labels[0];
+
+      expect(label.FgColor).not.toHaveProperty('spec');
+      expect(label.FgColor).not.toHaveProperty('pad');
+      expect(label.BgColor).not.toHaveProperty('spec');
+      expect(label.BgColor).not.toHaveProperty('pad');
     });
   });
 

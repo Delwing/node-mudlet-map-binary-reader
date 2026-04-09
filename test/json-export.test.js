@@ -3,7 +3,7 @@
 jest.mock('fs');
 const fs = require('fs');
 const exportMap = require('../json-export');
-const { makeMinimalMap, makeMultiAreaMap, makeMinimalColor } = require('./fixtures');
+const { makeMinimalMap, makeMultiAreaMap, makeMinimalColor, makeMapWithLabels } = require('./fixtures');
 
 function getWrittenJson() {
   expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
@@ -109,6 +109,19 @@ describe('json-export', () => {
       const exit = getWrittenJson().areas[0].rooms[0].exits.find(e => e.name === 'climb ladder');
       expect(exit).toBeDefined();
       expect(exit.exitId).toBe(2);
+    });
+
+    test('label is converted with correct fields', () => {
+      exportMap(makeMapWithLabels(), '/tmp/out.json');
+      const label = getWrittenJson().areas[0].labels[0];
+
+      expect(label.text).toBe('Test Label');
+      expect(label.coordinates).toEqual([0, 0, 0]);
+      expect(label.size).toEqual([100, 50]);
+      expect(label.scaledels).toBe(true);   // !noScaling
+      expect(label.showOnTop).toBe(false);
+      // chunkString on empty base64 string returns null (no regex matches)
+      expect(label.image).toBeNull();
     });
 
     test('locked special exit has locked: true', () => {

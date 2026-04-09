@@ -135,6 +135,27 @@ const makeMultiAreaMap = () => {
   return map;
 };
 
+const makeMinimalLabel = () => ({
+  id: 1,
+  pos: [0, 0, 0],
+  dummy1: 0,
+  dummy2: 0,
+  size: [100, 50],
+  text: 'Test Label',
+  fgColor: makeMinimalColor(),
+  bgColor: makeMinimalColor(),
+  pixMap: '',
+  noScaling: false,
+  showOnTop: false,
+});
+
+// Map with one label in area 1
+const makeMapWithLabels = () => {
+  const map = makeMinimalMap();
+  map.labels[1] = [makeMinimalLabel()];
+  return map;
+};
+
 module.exports = {
   makeMinimalColor,
   makeMinimalFont,
@@ -144,4 +165,6 @@ module.exports = {
   makeMapWithSpecialExits,
   makeMapWithCustomLines,
   makeMultiAreaMap,
+  makeMinimalLabel,
+  makeMapWithLabels,
 };

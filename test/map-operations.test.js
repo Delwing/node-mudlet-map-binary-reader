@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { randomUUID } = require('crypto');
 const { MudletMapReader } = require('../index');
-const { makeMinimalMap, makeMapWithSpecialExits, makeMultiAreaMap } = require('./fixtures');
+const { makeMinimalMap, makeMapWithSpecialExits, makeMultiAreaMap, makeMapWithLabels } = require('./fixtures');
 
 describe('readMap / writeMap round-trip', () => {
   let tmpFile;
@@ -66,6 +66,21 @@ describe('readMap / writeMap round-trip', () => {
 
     expect(result.rooms[1].mSpecialExits).toEqual({ 'enter portal': 99 });
     expect(result.rooms[1].mSpecialExitLocks).toEqual([]);
+  });
+
+  test('label survives write → read with key fields intact', () => {
+    const input = makeMapWithLabels();
+
+    MudletMapReader.write(input, tmpFile);
+    const result = MudletMapReader.read(tmpFile);
+
+    expect(result.labels[1]).toHaveLength(1);
+    const label = result.labels[1][0];
+    expect(label.text).toBe('Test Label');
+    expect(label.pos).toEqual([0, 0, 0]);
+    expect(label.size).toEqual([100, 50]);
+    expect(label.noScaling).toBe(false);
+    expect(label.showOnTop).toBe(false);
   });
 
   test('multi-area map preserves all areas and room assignments', () => {
