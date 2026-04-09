@@ -3,7 +3,7 @@
 jest.mock('fs');
 const fs = require('fs');
 const exportMap = require('../json-export');
-const { makeMinimalMap, makeMultiAreaMap } = require('./fixtures');
+const { makeMinimalMap, makeMultiAreaMap, makeMinimalColor } = require('./fixtures');
 
 function getWrittenJson() {
   expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
@@ -43,6 +43,17 @@ describe('json-export', () => {
       map.envColors = { 5: 3 };
       exportMap(map, '/tmp/out.json');
       expect(getWrittenJson().envToColorMapping).toEqual({ 5: 3 });
+    });
+
+    test('custom env colors appear in customEnvColors with correct RGB and id', () => {
+      const map = makeMinimalMap();
+      map.mCustomEnvColors[42] = makeMinimalColor(); // alpha=255 → color24RGB
+      exportMap(map, '/tmp/out.json');
+      expect(getWrittenJson().customEnvColors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 42, color24RGB: [0, 0, 0] }),
+        ])
+      );
     });
 
     test('defaultAreaName and anonymousAreaName have fixed values', () => {
