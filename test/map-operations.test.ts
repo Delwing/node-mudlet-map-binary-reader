@@ -1,14 +1,15 @@
 'use strict';
 
-const os = require('os');
-const path = require('path');
-const fs = require('fs');
-const { randomUUID } = require('crypto');
-const { MudletMapReader } = require('../index');
-const { makeMinimalMap, makeMapWithSpecialExits, makeMultiAreaMap, makeMapWithLabels } = require('./fixtures');
+import os from 'os';
+import path from 'path';
+import fs from 'fs';
+import { randomUUID } from 'crypto';
+import { MudletMapReader } from '../src';
+import { QUserType } from '../src/models/mudlet-models';
+import { makeMinimalMap, makeMapWithSpecialExits, makeMultiAreaMap, makeMapWithLabels } from './fixtures';
 
 describe('readMap / writeMap round-trip', () => {
-  let tmpFile;
+  let tmpFile: string;
 
   beforeEach(() => {
     tmpFile = path.join(os.tmpdir(), `mudlet-test-${randomUUID()}.dat`);
@@ -81,6 +82,24 @@ describe('readMap / writeMap round-trip', () => {
     expect(label.size).toEqual([100, 50]);
     expect(label.noScaling).toBe(false);
     expect(label.showOnTop).toBe(false);
+  });
+
+  test('special exit without 0/1 prefix is treated as unlocked exit name', () => {
+    // Older Mudlet versions stored special exits without a '0' or '1' prefix.
+    // Line 33 of map-operations.ts handles this legacy format.
+    const input = makeMinimalMap();
+    // Set rawSpecialExits directly with an unprefixed exit name, bypassing writeMap
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (input.rooms[1] as any).rawSpecialExits = { 99: ['legacy door'] };
+
+    // Serialize at the low level to preserve the unprefixed rawSpecialExits
+    const buf = QUserType.get('MudletMap').from(input).toBuffer(true);
+    fs.writeFileSync(tmpFile, buf);
+
+    const result = MudletMapReader.read(tmpFile);
+
+    expect(result.rooms[1].mSpecialExits).toEqual({ 'legacy door': 99 });
+    expect(result.rooms[1].mSpecialExitLocks).toEqual([]);
   });
 
   test('multi-area map preserves all areas and room assignments', () => {

@@ -1,10 +1,10 @@
-const { QBool, QUserType } = require("qtdatastream/src/types");
-const { MudletLabels, MudletRooms, MudletAreas } = require("./mudlet-types");
-const { QList, QMap, QPair, QMultiMap } = require("./qstream-containers");
-const { QString, QColor, QPoint, QFont, QPixMap, QVector } = require("./qstream-types");
+import { QBool, QUserType } from 'qtdatastream/src/types';
+import { types } from 'qtdatastream';
+import { MudletLabels, MudletRooms, MudletAreas } from './mudlet-types';
+import { QList, QMap, QPair, QMultiMap } from './qstream-containers';
+import { QString, QColor, QPoint, QFont, QPixMap, QVector } from './qstream-types';
 
-const Types = require("qtdatastream").types.Types;
-const { qtype, QInt, QDouble, QUInt } = require("qtdatastream").types;
+const { qtype, QInt, QDouble, QUInt, Types } = types;
 
 Types.POINT = 25;
 Types.FONT = 64;
@@ -12,22 +12,22 @@ Types.PIXMAP = 65;
 Types.COLOR = 67;
 Types.VECTOR = 84;
 
-const MudletTypes = {
-    LABELS : 200,
-    ROOMS : 201,
-    AREAS : 202
-}
+const MudletTypeIds = {
+  LABELS: 200,
+  ROOMS: 201,
+  AREAS: 202,
+} as const;
 
 qtype(Types.POINT)(QPoint);
 qtype(Types.FONT)(QFont);
 qtype(Types.PIXMAP)(QPixMap);
 qtype(Types.COLOR)(QColor);
 qtype(Types.VECTOR)(QVector);
-qtype(MudletTypes.LABELS)(MudletLabels);
-qtype(MudletTypes.ROOMS)(MudletRooms);
-qtype(MudletTypes.AREAS)(MudletAreas);
+qtype(MudletTypeIds.LABELS)(MudletLabels);
+qtype(MudletTypeIds.ROOMS)(MudletRooms);
+qtype(MudletTypeIds.AREAS)(MudletAreas);
 
-QUserType.register("MudletArea", [
+QUserType.register('MudletArea', [
   { rooms: QList(QUInt) },
   { zLevels: QList(QInt) },
   { mAreaExits: QMultiMap(QInt, QPair(QInt, QInt)) },
@@ -49,7 +49,7 @@ QUserType.register("MudletArea", [
   { userData: QMap(QString, QString) },
 ]);
 
-QUserType.register("MudletRoom", [
+QUserType.register('MudletRoom', [
   { area: Types.INT },
   { x: Types.INT },
   { y: Types.INT },
@@ -83,8 +83,7 @@ QUserType.register("MudletRoom", [
   { doors: QMap(QString, QInt) },
 ]);
 
-
-QUserType.register("MudletLabel", [
+QUserType.register('MudletLabel', [
   { id: Types.INT },
   { pos: Types.VECTOR },
   { dummy1: Types.DOUBLE },
@@ -98,7 +97,7 @@ QUserType.register("MudletLabel", [
   { showOnTop: Types.BOOL },
 ]);
 
-QUserType.register("MudletMap", [
+QUserType.register('MudletMap', [
   { version: Types.INT },
   { envColors: QMap(QInt, QInt) },
   { areaNames: QMap(QInt, QString, true) },
@@ -108,13 +107,10 @@ QUserType.register("MudletMap", [
   { mapSymbolFont: Types.FONT },
   { mapFontFudgeFactor: Types.DOUBLE },
   { useOnlyMapFont: Types.BOOL },
-  { areas: MudletTypes.AREAS },
+  { areas: MudletTypeIds.AREAS },
   { mRoomIdHash: QMap(QString, QInt) },
-  { labels: MudletTypes.LABELS },
-  { rooms: MudletTypes.ROOMS },
+  { labels: MudletTypeIds.LABELS },
+  { rooms: MudletTypeIds.ROOMS },
 ]);
 
-module.exports = {
-    QUserType,
-    MudletTypes
-}
+export { QUserType, MudletTypeIds };

@@ -1,25 +1,25 @@
-declare namespace Mudlet {
-  interface MudletMap {
-    version: number;
-    envColors: Record<number, number>;
-    areaNames: Record<number, string>;
-    mCustomEnvColors: Record<number, MudletColor>;
-    mpRoomDbHashToRoomId: Record<string, number>;
-    mUserData: Record<string, string>;
-    mapSymbolFont: MudletFont;
-    mapFontFudgeFactor: number;
-    useOnlyMapFont: boolean;
-    areas: Record<number, MudletArea>;
-    mRoomIdHash: Record<string, number>;
-    labels: Record<number, MudletLabel>;
-    rooms: Record<number, MudletRoom>;
-  }
+/** Top-level Mudlet map model as stored in the binary map file. */
+export interface MudletMap {
+  version: number;
+  envColors: Record<number, number>;
+  areaNames: Record<number, string>;
+  mCustomEnvColors: Record<number, MudletColor>;
+  mpRoomDbHashToRoomId: Record<string, number>;
+  mUserData: Record<string, string>;
+  mapSymbolFont: MudletFont;
+  mapFontFudgeFactor: number;
+  useOnlyMapFont: boolean;
+  areas: Record<number, MudletArea>;
+  mRoomIdHash: Record<string, number>;
+  labels: Record<number, MudletLabel[]>;
+  rooms: Record<number, MudletRoom>;
 }
 
-interface MudletArea {
-  rooms: Array<number>;
-  zLevels: Array<number>;
-  mAreaExits: Record<number, Array<Array<number>>>
+/** A single area containing rooms, spatial bounds, and per-Z-level extents. */
+export interface MudletArea {
+  rooms: number[];
+  zLevels: number[];
+  mAreaExits: Record<number, [number, number][]>;
   gridMode: boolean;
   max_x: number;
   max_y: number;
@@ -27,18 +27,19 @@ interface MudletArea {
   min_x: number;
   min_y: number;
   min_z: number;
-  span: Array<number>;
+  span: [number, number, number];
   xmaxForZ: Record<number, number>;
   ymaxForZ: Record<number, number>;
   xminForZ: Record<number, number>;
   yminForZ: Record<number, number>;
-  pos: Array<number>;
+  pos: [number, number, number];
   isZone: boolean;
   zoneAreaRef: number;
   userData: Record<string, string>;
 }
 
-interface MudletRoom {
+/** A single room with coordinates, exits, custom lines, and user data. */
+export interface MudletRoom {
   area: number;
   x: number;
   y: number;
@@ -59,41 +60,51 @@ interface MudletRoom {
   weight: number;
   name: string;
   isLocked: boolean;
+  rawSpecialExits?: Record<number, string[]>;
   mSpecialExits: Record<string, number>;
-  mSpecialExitLocks: Array<number>;
+  mSpecialExitLocks: number[];
   symbol: string;
   userData: Record<string, string>;
-  customLines: Record<string, Array<Array<number>>>;
+  customLines: Record<string, [number, number][]>;
   customLinesArrow: Record<string, boolean>;
   customLinesColor: Record<string, MudletColor>;
   customLinesStyle: Record<string, number>;
-  exitLocks: Array<number>;
-  stubs: Array<number>;
+  exitLocks: number[];
+  stubs: number[];
   exitWeights: Record<string, number>;
   doors: Record<string, number>;
+  hash?: string;
 }
 
-interface MudletLabel {
+/** A text/image label placed on the map at a specific position and size. */
+export interface MudletLabel {
   id: number;
-  pos: Array<number>;
-  size: Array<number>;
+  labelId?: number;
+  areaId?: number;
+  pos: [number, number, number];
+  dummy1?: number;
+  dummy2?: number;
+  size: [number, number];
   text: string;
   fgColor: MudletColor;
   bgColor: MudletColor;
-  pixMap: Buffer;
+  pixMap: Buffer | string;
   noScaling: boolean;
   showOnTop: boolean;
 }
 
-interface MudletColor {
+/** An RGBA color as stored by Qt's QColor (spec-qualified). */
+export interface MudletColor {
   spec: number;
   alpha: number;
   r: number;
   g: number;
   b: number;
+  pad?: number;
 }
 
-interface MudletFont {
+/** A font descriptor as stored by Qt's QFont (QDataStream v5.12 layout). */
+export interface MudletFont {
   family: string;
   style: string;
   pointSize: number;

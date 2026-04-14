@@ -1,8 +1,15 @@
-'use strict';
+import type { MudletArea, MudletColor, MudletFont, MudletLabel, MudletMap, MudletRoom } from '../src';
 
-const makeMinimalColor = () => ({ spec: 1, alpha: 255, r: 0, g: 0, b: 0, pad: 0 });
+export const makeMinimalColor = (): MudletColor => ({
+  spec: 1,
+  alpha: 255,
+  r: 0,
+  g: 0,
+  b: 0,
+  pad: 0,
+});
 
-const makeMinimalFont = () => ({
+export const makeMinimalFont = (): MudletFont => ({
   family: 'Arial',
   style: '',
   pointSize: 12.0,
@@ -28,7 +35,7 @@ const makeMinimalFont = () => ({
   letterSpacingIsAbsolute: false,
 });
 
-const makeMinimalRoom = (id, areaId = 1) => ({
+export const makeMinimalRoom = (id: number, areaId = 1): MudletRoom => ({
   area: areaId,
   x: 0,
   y: 0,
@@ -64,7 +71,7 @@ const makeMinimalRoom = (id, areaId = 1) => ({
   doors: {},
 });
 
-const makeMinimalArea = (roomIds) => ({
+export const makeMinimalArea = (roomIds: number[]): MudletArea => ({
   rooms: [...roomIds],
   zLevels: [0],
   mAreaExits: {},
@@ -86,7 +93,7 @@ const makeMinimalArea = (roomIds) => ({
   userData: {},
 });
 
-const makeMinimalMap = () => ({
+export const makeMinimalMap = (): MudletMap => ({
   version: 20,
   envColors: {},
   areaNames: { 1: 'Test Area' },
@@ -105,7 +112,7 @@ const makeMinimalMap = () => ({
 // Room with unlocked and locked special exits.
 // Targets are fictional room IDs (99, 100) — they don't need to exist in the map.
 // mSpecialExitLocks is per destination room ID: 100 is locked, 99 is not.
-const makeMapWithSpecialExits = () => {
+export const makeMapWithSpecialExits = (): MudletMap => {
   const map = makeMinimalMap();
   map.rooms[1].mSpecialExits = { 'open door': 99, 'push lever': 100 };
   map.rooms[1].mSpecialExitLocks = [100];
@@ -116,7 +123,7 @@ const makeMapWithSpecialExits = () => {
 // Style 1 = 'solid line' in reader-export's penStyles.
 // Do NOT pass this fixture to json-export tests: json-export uses short direction names ('n')
 // and its lineStyles map starts at 2, so style 1 would produce undefined.
-const makeMapWithCustomLines = () => {
+export const makeMapWithCustomLines = (): MudletMap => {
   const map = makeMinimalMap();
   map.rooms[1].customLines = { north: [[0.0, 0.0], [1.0, 1.0]] };
   map.rooms[1].customLinesArrow = { north: true };
@@ -126,7 +133,7 @@ const makeMapWithCustomLines = () => {
 };
 
 // Map with 2 areas and 3 rooms total
-const makeMultiAreaMap = () => {
+export const makeMultiAreaMap = (): MudletMap => {
   const map = makeMinimalMap();
   map.areaNames[2] = 'Second Area';
   map.areas[2] = makeMinimalArea([2, 3]);
@@ -135,7 +142,7 @@ const makeMultiAreaMap = () => {
   return map;
 };
 
-const makeMinimalLabel = () => ({
+export const makeMinimalLabel = (): MudletLabel => ({
   id: 1,
   pos: [0, 0, 0],
   dummy1: 0,
@@ -149,22 +156,17 @@ const makeMinimalLabel = () => ({
   showOnTop: false,
 });
 
+// Label with a real pixMap buffer (tiny valid-ish data) and areaId/labelId set
+export const makeLabelWithPixMap = (): MudletLabel => ({
+  ...makeMinimalLabel(),
+  areaId: 1,
+  labelId: 42,
+  pixMap: Buffer.from('fake-image-data'),
+});
+
 // Map with one label in area 1
-const makeMapWithLabels = () => {
+export const makeMapWithLabels = (): MudletMap => {
   const map = makeMinimalMap();
   map.labels[1] = [makeMinimalLabel()];
   return map;
-};
-
-module.exports = {
-  makeMinimalColor,
-  makeMinimalFont,
-  makeMinimalRoom,
-  makeMinimalArea,
-  makeMinimalMap,
-  makeMapWithSpecialExits,
-  makeMapWithCustomLines,
-  makeMultiAreaMap,
-  makeMinimalLabel,
-  makeMapWithLabels,
 };

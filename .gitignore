@@ -2,3 +2,5 @@ node_modules
 output
 tester
 .idea
+dist
+coverage

@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn)",
+      "Bash(yarn test:*)",
+      "Bash(git:*)",
+      "Bash(node -e \"const j = require\\('./jest.config.js'\\); console.log\\(JSON.stringify\\(j, null, 2\\)\\)\")",
+      "Bash(node -e \"const pkg = require\\('./package.json'\\); console.log\\('jest version in devDeps:', pkg.devDependencies.jest\\); console.log\\('installed jest version:', require\\('./node_modules/jest/package.json'\\).version\\);\")",
+      "Bash(node -e \"const pkg = require\\('./package.json'\\); const keys = Object.keys\\(pkg\\); console.log\\('package.json key order:', keys.join\\(', '\\)\\)\")",
+      "Bash(node:*)",
+      "Bash(ls E:/Code/node-mudlet-map-binary-reader/*.js)",
+      "Bash(xargs grep:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(yarn install:*)",
+      "Bash(rm index.js map-operations.js reader-export.js json-export.js models/mudlet-models.js models/mudlet-types.js models/qstream-containers.js models/qstream-types.js types/map.d.ts test/fixtures.js test/json-export.test.js test/map-operations.test.js test/reader-export.test.js)",
+      "Bash(rmdir types:*)",
+      "Bash(yarn build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(yarn add:*)",
+      "Bash(yarn lint:*)",
+      "WebSearch"
+    ]
+  }
+}
