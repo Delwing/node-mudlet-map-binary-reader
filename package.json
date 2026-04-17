@@ -1,6 +1,6 @@
 {
   "name": "mudlet-map-binary-reader",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "keywords": [
     "mudlet",
     "map",
@@ -14,7 +14,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "mudlet-colors.json"
   ],
   "scripts": {
     "build": "tsc",
