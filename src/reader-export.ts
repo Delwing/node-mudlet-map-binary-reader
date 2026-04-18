@@ -32,6 +32,7 @@ export interface RendererCustomLine {
 /** A room as consumed by the JS Mudlet Map Renderer. */
 export interface RendererRoom {
   id: number;
+  area: number;
   env?: number;
   roomChar?: string;
   exits: Record<string, number>;
@@ -93,6 +94,7 @@ function convertRoom(roomId: number, room: MudletRoom, hash?: string): RendererR
 
   return {
     id: roomId,
+    area: room.area,
     ...(room.environment !== undefined ? { env: room.environment } : {}),
     ...(room.symbol ? { roomChar: room.symbol } : {}),
     exits,

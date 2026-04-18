@@ -51,6 +51,16 @@ describe('reader-export', () => {
       expect(room).not.toHaveProperty('symbol');
     });
 
+    test('room area id is preserved on the converted room', () => {
+      const map = makeMinimalMap();
+      map.rooms[1].area = 1;
+
+      const { mapData } = readerExport(map);
+      const room = mapData[0].rooms[0];
+
+      expect(room.area).toBe(1);
+    });
+
     test('room environment is remapped to env', () => {
       const map = makeMinimalMap();
       map.rooms[1].environment = 7;
