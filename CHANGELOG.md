@@ -1,3 +1,9 @@
+# 0.7.3
+- fix export for Mudlet Map Renderer
+
+# 0.7.0
+- complete TS rewrite. !!! Broken export for Mudlet Map Renderer !!!
+
 # 0.6.0
 - json export will not remove pathwalking locks
 

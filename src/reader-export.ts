@@ -29,20 +29,47 @@ export interface RendererCustomLine {
   };
 }
 
-/** A room as consumed by the JS Mudlet Map Renderer. */
-export interface RendererRoom {
+/**
+ * A room as consumed by the JS Mudlet Map Renderer.
+ *
+ * Preserves every field from {@link MudletRoom} (`x`, `y`, `z`, `weight`, `name`,
+ * `userData`, `doors`, `exitLocks`, `stubs`, `exitWeights`, `mSpecialExitLocks`,
+ * `isLocked`, …) and only remaps the per-direction exits, special exits, custom lines,
+ * environment, and symbol fields.
+ */
+export type RendererRoom = Omit<
+  MudletRoom,
+  | 'north' | 'northeast' | 'east' | 'southeast'
+  | 'south' | 'southwest' | 'west' | 'northwest'
+  | 'up' | 'down' | 'in' | 'out'
+  | 'environment' | 'symbol'
+  | 'mSpecialExits'
+  | 'customLines' | 'customLinesArrow' | 'customLinesColor' | 'customLinesStyle'
+  | 'hash'
+> & {
   id: number;
-  area: number;
   env?: number;
   roomChar?: string;
   exits: Record<string, number>;
   specialExits: Record<string, number>;
   customLines: Record<string, RendererCustomLine>;
   hash?: string;
-}
+};
 
-/** A map label as consumed by the JS Mudlet Map Renderer. */
-export interface RendererLabel {
+/**
+ * A map label as consumed by the JS Mudlet Map Renderer.
+ *
+ * Preserves every field from {@link MudletLabel} (`id`, `areaId`, `labelId`, …) other than
+ * the ones that are renamed (`pos` → X/Y/Z, `size` → Width/Height, `text` → Text,
+ * `fgColor`/`bgColor` → FgColor/BgColor) or dropped (`dummy1`, `dummy2`, `noScaling`, `showOnTop`).
+ * `pixMap` is always base64-encoded inline.
+ */
+export type RendererLabel = Omit<
+  MudletLabel,
+  'pos' | 'size' | 'text' | 'fgColor' | 'bgColor'
+  | 'dummy1' | 'dummy2' | 'noScaling' | 'showOnTop'
+  | 'pixMap'
+> & {
   X: number;
   Y: number;
   Z: number;
@@ -52,7 +79,7 @@ export interface RendererLabel {
   FgColor: Omit<MudletColor, 'spec' | 'pad'>;
   BgColor: Omit<MudletColor, 'spec' | 'pad'>;
   pixMap: string;
-}
+};
 
 /** An area with its rooms and labels, formatted for the JS Mudlet Map Renderer. */
 export interface RendererArea {
@@ -70,12 +97,12 @@ export interface RendererExport {
 
 function convertRoom(roomId: number, room: MudletRoom, hash?: string): RendererRoom {
   const exits: Record<string, number> = {};
-  roomExits.forEach((key) => {
-    const dest = room[key as RoomExit] as number;
+  for (const key of roomExits) {
+    const dest = room[key as RoomExit];
     if (dest !== -1) {
       exits[key] = dest;
     }
-  });
+  }
 
   const customLines: Record<string, RendererCustomLine> = {};
   for (const key in room.customLines) {
@@ -92,45 +119,63 @@ function convertRoom(roomId: number, room: MudletRoom, hash?: string): RendererR
     }
   }
 
-  return {
+  // Mirror 0.6.0: spread the original room (preserving x, y, z, weight, name,
+  // userData, doors, exitLocks, stubs, exitWeights, mSpecialExitLocks, isLocked, …),
+  // strip the per-direction exit keys and custom-line working fields, and rename
+  // mSpecialExits/environment/symbol. environment and symbol are only renamed when
+  // truthy (matching 0.6.0's `if (room.environment)` / `if (room.symbol)` checks).
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  const {
+    north: _n, northeast: _ne, east: _e, southeast: _se,
+    south: _s, southwest: _sw, west: _w, northwest: _nw,
+    up: _u, down: _d, in: _in, out: _out,
+    mSpecialExits,
+    customLines: _cl, customLinesArrow: _cla, customLinesColor: _clc, customLinesStyle: _cls,
+    environment, symbol, hash: _h,
+    ...rest
+  } = room;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
+  const result: RendererRoom = {
+    ...rest,
     id: roomId,
-    area: room.area,
-    ...(room.environment !== undefined ? { env: room.environment } : {}),
-    ...(room.symbol ? { roomChar: room.symbol } : {}),
     exits,
-    specialExits: room.mSpecialExits,
+    specialExits: mSpecialExits,
     customLines,
-    ...(hash ? { hash } : {}),
   };
+  if (environment) result.env = environment;
+  if (symbol) result.roomChar = symbol;
+  if (hash) result.hash = hash;
+  return result;
 }
 
-function convertLabel(label: MudletLabel, directory?: string): RendererLabel {
-  let pixMap: string;
-  if (directory) {
-    if (!fs.existsSync(`${directory}/labels`)) {
-      fs.mkdirSync(`${directory}/labels`);
-    }
-    fs.writeFileSync(
-      `${directory}/labels/${label.areaId}-${label.labelId}.png`,
-      Buffer.from(label.pixMap as Buffer)
-    );
-    pixMap = '';
-  } else {
-    pixMap = Buffer.from(label.pixMap as Buffer).toString('base64');
-  }
+function convertLabel(label: MudletLabel): RendererLabel {
+  const pixMap = Buffer.from(label.pixMap as Buffer).toString('base64');
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   const { spec: _fSpec, pad: _fPad, ...fgColor } = label.fgColor;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { spec: _bSpec, pad: _bPad, ...bgColor } = label.bgColor;
 
+  // Mirror 0.6.0: spread the original label (preserving id, areaId, labelId, …),
+  // strip the renamed/dropped fields, and add the renderer-shaped fields.
+  const {
+    pos, size, text,
+    fgColor: _fg, bgColor: _bg,
+    dummy1: _d1, dummy2: _d2,
+    noScaling: _ns, showOnTop: _sot,
+    pixMap: _pm,
+    ...rest
+  } = label;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+
   return {
-    X: label.pos[0],
-    Y: label.pos[1],
-    Z: label.pos[2],
-    Width: label.size[0],
-    Height: label.size[1],
-    Text: label.text,
+    ...rest,
+    X: pos[0],
+    Y: pos[1],
+    Z: pos[2],
+    Width: size[0],
+    Height: size[1],
+    Text: text,
     FgColor: fgColor,
     BgColor: bgColor,
     pixMap,
@@ -209,7 +254,7 @@ export default function readerExport(mapModel: MudletMap, directory?: string): R
           convertRoom(roomId, map.rooms[roomId], roomToHash[roomId])
         ),
         labels: map.labels[areaId]
-          ? map.labels[areaId].map((label) => convertLabel(label, directory))
+          ? map.labels[areaId].map((label) => convertLabel(label))
           : [],
       };
       mapData.push(area);

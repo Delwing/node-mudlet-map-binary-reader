@@ -71,6 +71,38 @@ describe('reader-export', () => {
       expect(room.env).toBe(7);
       expect(room).not.toHaveProperty('environment');
     });
+
+    test('room coordinates and metadata fields are preserved (0.6.0 contract)', () => {
+      const map = makeMinimalMap();
+      map.rooms[1].x = 10;
+      map.rooms[1].y = 20;
+      map.rooms[1].z = 3;
+      map.rooms[1].weight = 5;
+      map.rooms[1].name = 'The Hall';
+      map.rooms[1].isLocked = true;
+      map.rooms[1].userData = { key: 'value' };
+      map.rooms[1].doors = { north: 2 };
+      map.rooms[1].exitLocks = [1];
+      map.rooms[1].stubs = [4];
+      map.rooms[1].exitWeights = { north: 7 };
+      map.rooms[1].mSpecialExitLocks = [99];
+
+      const { mapData } = readerExport(map);
+      const room = mapData[0].rooms[0] as unknown as Record<string, unknown>;
+
+      expect(room.x).toBe(10);
+      expect(room.y).toBe(20);
+      expect(room.z).toBe(3);
+      expect(room.weight).toBe(5);
+      expect(room.name).toBe('The Hall');
+      expect(room.isLocked).toBe(true);
+      expect(room.userData).toEqual({ key: 'value' });
+      expect(room.doors).toEqual({ north: 2 });
+      expect(room.exitLocks).toEqual([1]);
+      expect(room.stubs).toEqual([4]);
+      expect(room.exitWeights).toEqual({ north: 7 });
+      expect(room.mSpecialExitLocks).toEqual([99]);
+    });
   });
 
   describe('custom lines conversion', () => {
@@ -121,6 +153,33 @@ describe('reader-export', () => {
       expect(label.BgColor).not.toHaveProperty('spec');
       expect(label.BgColor).not.toHaveProperty('pad');
     });
+
+    test('label id, areaId, labelId are preserved (0.6.0 contract)', () => {
+      const map = makeMinimalMap();
+      map.labels[1] = [makeLabelWithPixMap()];
+
+      const { mapData } = readerExport(map);
+      const label = mapData[0].labels[0] as unknown as Record<string, unknown>;
+
+      expect(label.id).toBe(1);
+      expect(label.areaId).toBe(1);
+      expect(label.labelId).toBe(42);
+    });
+
+    test('label dropped fields (dummy1, dummy2, noScaling, showOnTop, pos, size, text, fgColor, bgColor) are removed', () => {
+      const { mapData } = readerExport(makeMapWithLabels());
+      const label = mapData[0].labels[0] as unknown as Record<string, unknown>;
+
+      expect(label).not.toHaveProperty('dummy1');
+      expect(label).not.toHaveProperty('dummy2');
+      expect(label).not.toHaveProperty('noScaling');
+      expect(label).not.toHaveProperty('showOnTop');
+      expect(label).not.toHaveProperty('pos');
+      expect(label).not.toHaveProperty('size');
+      expect(label).not.toHaveProperty('text');
+      expect(label).not.toHaveProperty('fgColor');
+      expect(label).not.toHaveProperty('bgColor');
+    });
   });
 
   describe('color generation', () => {
@@ -152,33 +211,27 @@ describe('reader-export', () => {
   });
 
   describe('label with directory', () => {
-    test('writes label pixMap to file when directory is provided', () => {
+    test('does not write label PNG files to disk when directory is provided', () => {
       const map = makeMinimalMap();
       map.labels[1] = [makeLabelWithPixMap()];
 
-      fsMock.existsSync.mockReturnValue(false);
-
       readerExport(map, '/tmp/export');
 
-      // Should create labels directory
-      expect(fsMock.mkdirSync).toHaveBeenCalledWith('/tmp/export/labels');
-      // Should write the label PNG file
       const labelWrite = fsMock.writeFileSync.mock.calls.find((c) =>
         (c[0] as string).includes('/labels/')
       );
-      expect(labelWrite).toBeDefined();
-      expect(labelWrite![0]).toBe('/tmp/export/labels/1-42.png');
+      expect(labelWrite).toBeUndefined();
+      expect(fsMock.mkdirSync).not.toHaveBeenCalled();
     });
 
-    test('skips mkdir when labels directory already exists', () => {
+    test('label pixMap is base64-encoded inline even when directory is provided', () => {
       const map = makeMinimalMap();
       map.labels[1] = [makeLabelWithPixMap()];
 
-      fsMock.existsSync.mockReturnValue(true);
+      const { mapData } = readerExport(map, '/tmp/export');
+      const label = mapData[0].labels[0];
 
-      readerExport(map, '/tmp/export');
-
-      expect(fsMock.mkdirSync).not.toHaveBeenCalled();
+      expect(label.pixMap).toBe(Buffer.from('fake-image-data').toString('base64'));
     });
   });
 
