@@ -1,20 +1,10 @@
 'use strict';
 
-jest.mock('fs');
-import fs from 'fs';
 import readerExport from '../src/reader-export';
 import { makeMinimalMap, makeMinimalColor, makeMapWithCustomLines, makeMapWithLabels, makeLabelWithPixMap } from './fixtures';
 import mudletColors from '../mudlet-colors.json';
 
-const fsMock = fs as jest.Mocked<typeof fs>;
-
 describe('reader-export', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    fsMock.existsSync.mockReturnValue(false);
-    fsMock.mkdirSync.mockImplementation(() => undefined);
-    fsMock.writeFileSync.mockImplementation(() => undefined);
-  });
 
   describe('room conversion', () => {
     test('standard exits set to -1 are excluded from exits object', () => {
@@ -166,19 +156,25 @@ describe('reader-export', () => {
       expect(label.labelId).toBe(42);
     });
 
-    test('label dropped fields (dummy1, dummy2, noScaling, showOnTop, pos, size, text, fgColor, bgColor) are removed', () => {
+    test('label dropped fields (dummy1, dummy2, pos, size, text, fgColor, bgColor) are removed', () => {
       const { mapData } = readerExport(makeMapWithLabels());
       const label = mapData[0].labels[0] as unknown as Record<string, unknown>;
 
       expect(label).not.toHaveProperty('dummy1');
       expect(label).not.toHaveProperty('dummy2');
-      expect(label).not.toHaveProperty('noScaling');
-      expect(label).not.toHaveProperty('showOnTop');
       expect(label).not.toHaveProperty('pos');
       expect(label).not.toHaveProperty('size');
       expect(label).not.toHaveProperty('text');
       expect(label).not.toHaveProperty('fgColor');
       expect(label).not.toHaveProperty('bgColor');
+    });
+
+    test('label includes noScaling and showOnTop', () => {
+      const { mapData } = readerExport(makeMapWithLabels());
+      const label = mapData[0].labels[0] as unknown as Record<string, unknown>;
+
+      expect(label).toHaveProperty('noScaling', false);
+      expect(label).toHaveProperty('showOnTop', false);
     });
   });
 
@@ -210,25 +206,12 @@ describe('reader-export', () => {
     });
   });
 
-  describe('label with directory', () => {
-    test('does not write label PNG files to disk when directory is provided', () => {
+  describe('label pixMap', () => {
+    test('pixMap is base64-encoded inline in the returned mapData', () => {
       const map = makeMinimalMap();
       map.labels[1] = [makeLabelWithPixMap()];
 
-      readerExport(map, '/tmp/export');
-
-      const labelWrite = fsMock.writeFileSync.mock.calls.find((c) =>
-        (c[0] as string).includes('/labels/')
-      );
-      expect(labelWrite).toBeUndefined();
-      expect(fsMock.mkdirSync).not.toHaveBeenCalled();
-    });
-
-    test('label pixMap is base64-encoded inline even when directory is provided', () => {
-      const map = makeMinimalMap();
-      map.labels[1] = [makeLabelWithPixMap()];
-
-      const { mapData } = readerExport(map, '/tmp/export');
+      const { mapData } = readerExport(map);
       const label = mapData[0].labels[0];
 
       expect(label.pixMap).toBe(Buffer.from('fake-image-data').toString('base64'));
@@ -263,22 +246,4 @@ describe('reader-export', () => {
     });
   });
 
-  describe('directory output', () => {
-    test('writes mapExport.js, colors.js, mapExport.json, colors.json when directory provided', () => {
-      readerExport(makeMinimalMap(), '/tmp/export');
-
-      const writtenFiles = fsMock.writeFileSync.mock.calls.map((c) => c[0]);
-      expect(writtenFiles).toContain('/tmp/export/mapExport.js');
-      expect(writtenFiles).toContain('/tmp/export/colors.js');
-      expect(writtenFiles).toContain('/tmp/export/mapExport.json');
-      expect(writtenFiles).toContain('/tmp/export/colors.json');
-    });
-
-    test('mapExport.js content starts with "mapData = "', () => {
-      readerExport(makeMinimalMap(), '/tmp/export');
-
-      const jsCall = fsMock.writeFileSync.mock.calls.find((c) => c[0] === '/tmp/export/mapExport.js');
-      expect(jsCall![1]).toMatch(/^mapData = /);
-    });
-  });
 });

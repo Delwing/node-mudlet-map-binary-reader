@@ -1,4 +1,3 @@
-import fs from 'fs';
 import _ from 'lodash';
 import type { MudletArea, MudletColor, MudletLabel, MudletMap } from './types';
 
@@ -299,14 +298,14 @@ function convertMapToMudletFormat(map: MudletMap): MapOutput {
 }
 
 /**
- * Exports map model to Mudlet JSON format
+ * Convert a map model to the Mudlet JSON export format.
+ *
+ * Pure: returns the JSON string. Persist it with your tool of choice.
  *
  * @param map - the Mudlet map model
- * @param mapFile - path to output file
- * @param minified - if true, output is not indented
+ * @param minified - if true, JSON is emitted without indentation
  */
-export default function exportMap(map: MudletMap, mapFile: string, minified?: boolean): void {
+export default function exportMap(map: MudletMap, minified?: boolean): string {
   const mudletMap = convertMapToMudletFormat(map);
-  const mapJson = JSON.stringify(mudletMap, null, minified ? 0 : 2);
-  fs.writeFileSync(mapFile, mapJson);
+  return JSON.stringify(mudletMap, null, minified ? 0 : 2);
 }

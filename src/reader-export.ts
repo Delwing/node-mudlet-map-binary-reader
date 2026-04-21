@@ -1,4 +1,3 @@
-import fs from 'fs';
 import _ from 'lodash';
 import type { MudletColor, MudletLabel, MudletMap, MudletRoom } from './types';
 import mudletColors from '../mudlet-colors.json';
@@ -10,6 +9,8 @@ const penStyles: Record<number, string> = {
   1: 'solid line',
   2: 'dash line',
   3: 'dot line',
+  4: 'dash dot line',
+  5: 'dash dot dot line',
 };
 
 /** RGB color for the JS Mudlet Map Renderer. */
@@ -61,13 +62,13 @@ export type RendererRoom = Omit<
  *
  * Preserves every field from {@link MudletLabel} (`id`, `areaId`, `labelId`, …) other than
  * the ones that are renamed (`pos` → X/Y/Z, `size` → Width/Height, `text` → Text,
- * `fgColor`/`bgColor` → FgColor/BgColor) or dropped (`dummy1`, `dummy2`, `noScaling`, `showOnTop`).
+ * `fgColor`/`bgColor` → FgColor/BgColor) or dropped (`dummy1`, `dummy2`).
  * `pixMap` is always base64-encoded inline.
  */
 export type RendererLabel = Omit<
   MudletLabel,
   'pos' | 'size' | 'text' | 'fgColor' | 'bgColor'
-  | 'dummy1' | 'dummy2' | 'noScaling' | 'showOnTop'
+  | 'dummy1' | 'dummy2'
   | 'pixMap'
 > & {
   X: number;
@@ -162,7 +163,6 @@ function convertLabel(label: MudletLabel): RendererLabel {
     pos, size, text,
     fgColor: _fg, bgColor: _bg,
     dummy1: _d1, dummy2: _d2,
-    noScaling: _ns, showOnTop: _sot,
     pixMap: _pm,
     ...rest
   } = label;
@@ -232,7 +232,12 @@ function generateColors(map: MudletMap): { envId: number; colors: number[] }[] {
  * @param directory - directory path; if provided, writes export as .js and .json files
  * @returns exported map data and colors
  */
-export default function readerExport(mapModel: MudletMap, directory?: string): RendererExport {
+/**
+ * Build the renderer-ready export (`{ mapData, colors }`) from a Mudlet map
+ * model. Pure: returns the data, never touches disk. Persist with your
+ * tool of choice (`fs.writeFileSync`, a `Blob`, an HTTP response, …).
+ */
+export default function readerExport(mapModel: MudletMap): RendererExport {
   const map = _.cloneDeep(mapModel);
   const mapData: RendererArea[] = [];
   const roomToHash = Object.entries(map.mpRoomDbHashToRoomId).reduce<Record<number, string>>(
@@ -262,13 +267,6 @@ export default function readerExport(mapModel: MudletMap, directory?: string): R
   }
 
   const colors = generateColors(map);
-
-  if (directory) {
-    fs.writeFileSync(`${directory}/mapExport.js`, 'mapData = ' + JSON.stringify(mapData));
-    fs.writeFileSync(`${directory}/colors.js`, 'colors = ' + JSON.stringify(colors));
-    fs.writeFileSync(`${directory}/mapExport.json`, JSON.stringify(mapData));
-    fs.writeFileSync(`${directory}/colors.json`, JSON.stringify(colors));
-  }
 
   return { mapData, colors };
 }

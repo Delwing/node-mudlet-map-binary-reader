@@ -1,22 +1,28 @@
 'use strict';
 
-jest.mock('fs');
-import fs from 'fs';
-import exportMap from '../src/json-export';
+import rawExportMap from '../src/json-export';
+import type { MudletMap } from '../src';
 import { makeMinimalMap, makeMultiAreaMap, makeMinimalColor, makeMapWithLabels, makeMinimalLabel } from './fixtures';
 
-const fsMock = fs as jest.Mocked<typeof fs>;
+// exportMap used to accept a target path and write to fs; it now returns
+// the JSON string directly. Tests were written against the legacy
+// "export → getWrittenJson()" pattern, so we keep the shape: each test
+// calls `exportMap(map, <ignored>)` which stashes the parsed JSON for
+// `getWrittenJson()` to return.
+let lastJson: Record<string, unknown> | null = null;
+
+function exportMap(map: MudletMap, _ignoredPath: string, minified?: boolean): void {
+  lastJson = JSON.parse(rawExportMap(map, minified)) as Record<string, unknown>;
+}
 
 function getWrittenJson(): Record<string, unknown> {
-  expect(fsMock.writeFileSync).toHaveBeenCalledTimes(1);
-  const call = fsMock.writeFileSync.mock.calls[0];
-  return JSON.parse(call[1] as string) as Record<string, unknown>;
+  if (!lastJson) throw new Error('exportMap was not called in this test');
+  return lastJson;
 }
 
 describe('json-export', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    fsMock.writeFileSync.mockImplementation(() => undefined);
+    lastJson = null;
   });
 
   describe('map-level fields', () => {
@@ -357,22 +363,17 @@ describe('json-export', () => {
     });
   });
 
-  describe('file output', () => {
-    test('writes to the provided file path', () => {
-      exportMap(makeMinimalMap(), '/my/map.json');
-      expect(fsMock.writeFileSync).toHaveBeenCalledWith('/my/map.json', expect.any(String));
+  describe('output format', () => {
+    test('returns the JSON as a string', () => {
+      expect(typeof rawExportMap(makeMinimalMap())).toBe('string');
     });
 
     test('minified output has no indentation', () => {
-      exportMap(makeMinimalMap(), '/my/map.json', true);
-      const content = fsMock.writeFileSync.mock.calls[0][1] as string;
-      expect(content).not.toMatch(/\n {2}/);
+      expect(rawExportMap(makeMinimalMap(), true)).not.toMatch(/\n {2}/);
     });
 
     test('non-minified output is indented', () => {
-      exportMap(makeMinimalMap(), '/my/map.json', false);
-      const content = fsMock.writeFileSync.mock.calls[0][1] as string;
-      expect(content).toMatch(/\n {2}/);
+      expect(rawExportMap(makeMinimalMap(), false)).toMatch(/\n {2}/);
     });
   });
 });
