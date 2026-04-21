@@ -1,3 +1,9 @@
+# 0.8.0
+- remove `fs` dependency from core modules; file I/O is now the caller's responsibility
+- add `readMapFromBuffer` and `writeMapToBuffer` for buffer-based read/write without touching the filesystem
+- `readMap` and `writeMap` still accept file paths but no longer bundle `fs` internally
+- fix CJS named-export compatibility with Vite 8 / oxc pre-bundler
+
 # 0.7.3
 - fix export for Mudlet Map Renderer
 
