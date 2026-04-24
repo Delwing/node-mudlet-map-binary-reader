@@ -142,6 +142,58 @@ export const makeMultiAreaMap = (): MudletMap => {
   return map;
 };
 
+// Map with 2 areas: A=1 (rooms 1,2,3) and B=2 (rooms 10,11).
+// Cross-area exits: room 2 (area 1) east → room 10 (area 2);
+//                   room 10 (area 2) west → room 2 (area 1).
+// Intra-area exits left as stubs/unset so they don't muddy mAreaExits.
+export const makeCrossAreaMap = (): MudletMap => {
+  const map = makeMinimalMap();
+  map.areaNames[2] = 'Area B';
+  map.areas[1] = makeMinimalArea([1, 2, 3]);
+  map.areas[2] = makeMinimalArea([10, 11]);
+  map.rooms[1] = makeMinimalRoom(1, 1);
+  map.rooms[2] = makeMinimalRoom(2, 1);
+  map.rooms[3] = makeMinimalRoom(3, 1);
+  map.rooms[10] = makeMinimalRoom(10, 2);
+  map.rooms[11] = makeMinimalRoom(11, 2);
+  map.rooms[2].east = 10;
+  map.rooms[10].west = 2;
+  return map;
+};
+
+// Map with 4 rooms in area 1 spread across 2 z-levels with varying x/y,
+// for exercising rebuildAreaExtents. Coordinates are picked so every
+// min/max and every per-Z bound is distinct and so the y-sign inversion
+// is observable (areas store -room.y; see TArea::calcSpan in Mudlet).
+//
+//   z=0: room 1 at (1,  2), room 2 at (5, -3)
+//   z=1: room 3 at (0,  0), room 4 at (7,  4)
+export const makeExtentsFixture = (): MudletMap => {
+  const map = makeMinimalMap();
+  map.areas[1] = makeMinimalArea([1, 2, 3, 4]);
+  map.rooms[1] = { ...makeMinimalRoom(1, 1), x: 1, y: 2, z: 0 };
+  map.rooms[2] = { ...makeMinimalRoom(2, 1), x: 5, y: -3, z: 0 };
+  map.rooms[3] = { ...makeMinimalRoom(3, 1), x: 0, y: 0, z: 1 };
+  map.rooms[4] = { ...makeMinimalRoom(4, 1), x: 7, y: 4, z: 1 };
+  return map;
+};
+
+// Map with 3 rooms in area 1: rooms 1 and 2 carry distinct non-empty hashes,
+// room 3 has no hash. Used to exercise rebuildRoomHashIndex — after a round
+// trip, mpRoomDbHashToRoomId should contain the two hash keys and nothing else.
+export const makeMapWithHashes = (): MudletMap => {
+  const map = makeMinimalMap();
+  map.areas[1] = makeMinimalArea([1, 2, 3]);
+  map.rooms[1] = { ...makeMinimalRoom(1, 1), hash: 'hash-room-1' };
+  map.rooms[2] = { ...makeMinimalRoom(2, 1), hash: 'hash-room-2' };
+  map.rooms[3] = makeMinimalRoom(3, 1);
+  map.mpRoomDbHashToRoomId = {
+    'hash-room-1': 1,
+    'hash-room-2': 2,
+  };
+  return map;
+};
+
 export const makeMinimalLabel = (): MudletLabel => ({
   id: 1,
   pos: [0, 0, 0],
