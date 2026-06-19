@@ -1,16 +1,24 @@
-import { QBool, QUserType } from 'qtdatastream/src/types';
-import { types } from 'qtdatastream';
+import {
+  QBool,
+  QUserType,
+  qtype,
+  QInt,
+  QDouble,
+  QUInt,
+  Types as BaseTypes,
+} from 'qtdatastream/types';
 import { MudletLabels, MudletRooms, MudletAreas } from './mudlet-types';
 import { QList, QMap, QPair, QMultiMap } from './qstream-containers';
 import { QString, QColor, QPoint, QFont, QPixMap, QVector } from './qstream-types';
 
-const { qtype, QInt, QDouble, QUInt, Types } = types;
-
-Types.POINT = 25;
-Types.FONT = 64;
-Types.PIXMAP = 65;
-Types.COLOR = 67;
-Types.VECTOR = 84;
+const Types: Record<string, number> = {
+  ...BaseTypes,
+  POINT: 25,
+  FONT: 64,
+  PIXMAP: 65,
+  COLOR: 67,
+  VECTOR: 84,
+};
 
 const MudletTypeIds = {
   LABELS: 200,

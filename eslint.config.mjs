@@ -5,6 +5,6 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.recommended,
   {
-    ignores: ["dist/", "node_modules/", "jest.config.js"],
+    ignores: ["dist/", "node_modules/", "vitest.config.ts"],
   }
 );

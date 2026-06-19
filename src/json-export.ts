@@ -173,7 +173,7 @@ function convertLabel(label: MudletLabel): LabelOutput {
     colors: [convertColor(label.fgColor), convertColor(label.bgColor)],
     coordinates: [label.pos[0], label.pos[1], label.pos[2]],
     id: label.id,
-    image: chunkString(Buffer.from(label.pixMap as Buffer).toString('base64'), 64),
+    image: chunkString(Buffer.from(label.pixMap as Uint8Array).toString('base64'), 64),
     scaledels: !label.noScaling,
     showOnTop: label.showOnTop,
     text: label.text,

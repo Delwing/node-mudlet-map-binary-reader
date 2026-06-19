@@ -21,12 +21,16 @@ I am no Node developer, so any hints and suggestions are more then welcome.
 
 ## Usage
 
+The library is browser-pure: it reads and writes **bytes** (`Uint8Array`), and never touches the filesystem itself. You supply the bytes — from Node's `fs`, a `fetch`/`Blob`, a file input, etc.
+
 ### Reading a map
 
 ```ts
+import { readFileSync } from "node:fs";
 import { MudletMapReader } from "mudlet-map-binary-reader";
 
-const map = MudletMapReader.read("map.dat");
+// In Node, read the bytes yourself; in the browser, use fetch/File instead.
+const map = MudletMapReader.readBuffer(readFileSync("map.dat"));
 
 console.log(`Map version: ${map.version}`);
 console.log(`Areas: ${Object.keys(map.areas).length}`);
@@ -36,7 +40,7 @@ console.log(`Rooms: ${Object.keys(map.rooms).length}`);
 ### Inspecting rooms and exits
 
 ```ts
-const map = MudletMapReader.read("map.dat");
+const map = MudletMapReader.readBuffer(readFileSync("map.dat"));
 
 for (const [id, room] of Object.entries(map.rooms)) {
   console.log(`Room ${id}: ${room.name} (env ${room.environment})`);
@@ -54,7 +58,9 @@ for (const [id, room] of Object.entries(map.rooms)) {
 ### Modifying and saving
 
 ```ts
-const map = MudletMapReader.read("map.dat");
+import { readFileSync, writeFileSync } from "node:fs";
+
+const map = MudletMapReader.readBuffer(readFileSync("map.dat"));
 
 // Rename a room
 map.rooms[1].name = "Grand Hall";
@@ -66,8 +72,9 @@ map.rooms[1].userData["notes"] = "quest start";
 map.rooms[1].x = 10;
 map.rooms[1].y = -5;
 
-// Save back to binary
-MudletMapReader.write(map, "map-modified.dat");
+// Serialize back to bytes, then persist them however you like
+const bytes = MudletMapReader.writeBuffer(map);
+writeFileSync("map-modified.dat", bytes);
 ```
 
 ### Exporting for JS Mudlet Map Renderer
@@ -75,7 +82,7 @@ MudletMapReader.write(map, "map-modified.dat");
 Exports the map into the format used by [js-mudlet-map-renderer](https://github.com/Delwing/js-mudlet-map-renderer).
 
 ```ts
-const map = MudletMapReader.read("map.dat");
+const map = MudletMapReader.readBuffer(readFileSync("map.dat"));
 
 // Without a directory — returns data without writing files
 const { mapData, colors } = MudletMapReader.export(map);
@@ -88,7 +95,7 @@ MudletMapReader.export(map, "output");
 ### Exporting to Mudlet JSON format
 
 ```ts
-const map = MudletMapReader.read("map.dat");
+const map = MudletMapReader.readBuffer(readFileSync("map.dat"));
 
 // Pretty-printed
 MudletMapReader.exportJson(map, "map.json");
@@ -100,7 +107,7 @@ MudletMapReader.exportJson(map, "map.min.json", true);
 ### Working with areas and labels
 
 ```ts
-const map = MudletMapReader.read("map.dat");
+const map = MudletMapReader.readBuffer(readFileSync("map.dat"));
 
 for (const [id, name] of Object.entries(map.areaNames)) {
   const area = map.areas[id as unknown as number];
@@ -129,7 +136,7 @@ function formatColor(color: MudletColor): string {
   return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.alpha})`;
 }
 
-const map = MudletMapReader.read("map.dat");
+const map = MudletMapReader.readBuffer(readFileSync("map.dat"));
 const outdoorRooms = getRoomsByEnvironment(map, 1);
 console.log(`Found ${outdoorRooms.length} outdoor rooms`);
 ```

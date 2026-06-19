@@ -1,4 +1,4 @@
-import { QClass, QInt, QUserType } from 'qtdatastream/src/types';
+import { QClass, QInt, QUserType } from 'qtdatastream/types';
 import type { ReadBuffer } from 'qtdatastream';
 
 import type { MudletArea, MudletLabel, MudletRoom } from '../types';
@@ -20,7 +20,7 @@ export class MudletLabels extends QClass {
 
   override toBuffer(): Buffer {
     const obj = this.__obj as Record<number, MudletLabel[]>;
-    const buffers: Buffer[] = [];
+    const buffers: Uint8Array[] = [];
     buffers.push(QInt.from(Object.keys(obj).length).toBuffer());
     for (const key of Object.keys(obj)) {
       const areaId = parseInt(key);
@@ -47,7 +47,7 @@ export class MudletAreas extends QClass {
 
   override toBuffer(): Buffer {
     const obj = this.__obj as Record<number, MudletArea>;
-    const buffers: Buffer[] = [];
+    const buffers: Uint8Array[] = [];
     buffers.push(QInt.from(Object.keys(obj).length).toBuffer());
     for (const [key, area] of Object.entries(obj).sort((a, b) => parseInt(a[0]) - parseInt(b[0]))) {
       buffers.push(QInt.from(parseInt(key)).toBuffer());
@@ -69,7 +69,7 @@ export class MudletRooms extends QClass {
 
   override toBuffer(): Buffer {
     const obj = this.__obj as Record<number, MudletRoom>;
-    const buffers: Buffer[] = [];
+    const buffers: Uint8Array[] = [];
     for (const [key, room] of Object.entries(obj).reverse()) {
       buffers.push(QInt.from(parseInt(key)).toBuffer());
       buffers.push(QUserType.get('MudletRoom').from(room).toBuffer(true));

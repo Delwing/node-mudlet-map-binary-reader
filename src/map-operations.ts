@@ -262,7 +262,7 @@ function dehydrateSpecialExits(map: MudletMap): void {
  * `fs.readFileSync(path)`; callers in the browser can pass a `Buffer`
  * constructed from a `File` / `ArrayBuffer`.
  */
-export function readMapFromBuffer(buf: Buffer): MudletMap {
+export function readMapFromBuffer(buf: Uint8Array): MudletMap {
   const rb = new ReadBuffer(buf);
   const map = QUserType.read(rb, 'MudletMap') as MudletMap;
   hydrateSpecialExits(map);
@@ -276,32 +276,10 @@ export function readMapFromBuffer(buf: Buffer): MudletMap {
  * `fs.writeFileSync(path, writeMapToBuffer(map))`; browser callers can
  * hand it to a `Blob` or HTTP response.
  */
-export function writeMapToBuffer(map: MudletMap): Buffer {
+export function writeMapToBuffer(map: MudletMap): Uint8Array {
   dehydrateSpecialExits(map);
   rebuildAreaExits(map);
   rebuildAreaExtents(map);
   rebuildRoomHashIndex(map);
   return QUserType.get('MudletMap').from(map).toBuffer(true);
-}
-
-/**
- * Node-only convenience: read a Mudlet binary map straight from disk.
- * For browser / buffer-based reading, use {@link readMapFromBuffer}.
- */
-export function readMap(file: string): MudletMap {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const fs = require('fs') as typeof import('fs');
-  return readMapFromBuffer(fs.readFileSync(file));
-}
-
-/**
- * Node-only convenience: serialise and write a Mudlet binary map to disk.
- * For browser / buffer-based writing, use {@link writeMapToBuffer} and
- * persist the returned `Buffer` with whatever mechanism fits.
- */
-export function writeMap(map: MudletMap, file: string): void {
-  const bytes = writeMapToBuffer(map);
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const fs = require('fs') as typeof import('fs');
-  fs.writeFileSync(file, bytes);
 }

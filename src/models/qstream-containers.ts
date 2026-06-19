@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { qtype, QClass, QUInt } from 'qtdatastream/src/types';
+import { qtype, QClass, QUInt } from 'qtdatastream/types';
 import type { ReadBuffer } from 'qtdatastream';
 
 let customCounter = 1000;
@@ -40,7 +40,7 @@ function createTypedMultiMap(keyClass: typeof QClass, valueClass: typeof QClass)
     }
 
     override toBuffer(): Buffer {
-      const bufs: Buffer[] = [];
+      const bufs: Uint8Array[] = [];
       const obj = this.__obj;
       if (obj instanceof Map) {
         bufs.push(QUInt.from(obj.size).toBuffer());
@@ -77,7 +77,7 @@ function createTypedMap(keyClass: typeof QClass, valueClass: typeof QClass): typ
     }
 
     override toBuffer(): Buffer {
-      const bufs: Buffer[] = [];
+      const bufs: Uint8Array[] = [];
       const obj = this.__obj;
       if (obj instanceof Map) {
         bufs.push(QUInt.from(obj.size).toBuffer());
@@ -110,7 +110,7 @@ function createTypedList(valueClass: typeof QClass): typeof QClass {
     }
 
     override toBuffer(): Buffer {
-      const bufs: Buffer[] = [];
+      const bufs: Uint8Array[] = [];
       const arr = this.__obj as any[];
       bufs.push(QUInt.from(arr.length).toBuffer());
       for (const el of arr) {

@@ -88,7 +88,7 @@ export interface MudletLabel {
   text: string;
   fgColor: MudletColor;
   bgColor: MudletColor;
-  pixMap: Buffer | string;
+  pixMap: Uint8Array | string;
   noScaling: boolean;
   showOnTop: boolean;
 }

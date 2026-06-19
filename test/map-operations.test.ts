@@ -1,10 +1,6 @@
 'use strict';
 
-import os from 'os';
-import path from 'path';
-import fs from 'fs';
-import { randomUUID } from 'crypto';
-import { MudletMapReader } from '../src';
+import { MudletMapReader, readMapFromBuffer } from '../src';
 import { QUserType } from '../src/models/mudlet-models';
 import {
   makeMinimalMap,
@@ -17,22 +13,11 @@ import {
   makeMapWithHashes,
 } from './fixtures';
 
-describe('readMap / writeMap round-trip', () => {
-  let tmpFile: string;
-
-  beforeEach(() => {
-    tmpFile = path.join(os.tmpdir(), `mudlet-test-${randomUUID()}.dat`);
-  });
-
-  afterEach(() => {
-    if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
-  });
-
+describe('readBuffer / writeBuffer round-trip', () => {
   test('basic map survives write → read with key fields intact', () => {
     const input = makeMinimalMap();
 
-    MudletMapReader.write(input, tmpFile);
-    const result = MudletMapReader.read(tmpFile);
+    const result = MudletMapReader.readBuffer(MudletMapReader.writeBuffer(input));
 
     expect(result.version).toBe(20);
     expect(result.areaNames[1]).toBe('Test Area');
@@ -54,8 +39,7 @@ describe('readMap / writeMap round-trip', () => {
     const input = makeMapWithSpecialExits();
     // room 1 has 'open door' → 99 (unlocked), 'push lever' → 100 (locked)
 
-    MudletMapReader.write(input, tmpFile);
-    const result = MudletMapReader.read(tmpFile);
+    const result = MudletMapReader.readBuffer(MudletMapReader.writeBuffer(input));
 
     expect(result.rooms[1].mSpecialExits).toEqual({
       'open door': 99,
@@ -71,8 +55,7 @@ describe('readMap / writeMap round-trip', () => {
     input.rooms[1].mSpecialExits = { 'enter portal': 99 };
     input.rooms[1].mSpecialExitLocks = [];
 
-    MudletMapReader.write(input, tmpFile);
-    const result = MudletMapReader.read(tmpFile);
+    const result = MudletMapReader.readBuffer(MudletMapReader.writeBuffer(input));
 
     expect(result.rooms[1].mSpecialExits).toEqual({ 'enter portal': 99 });
     expect(result.rooms[1].mSpecialExitLocks).toEqual([]);
@@ -81,8 +64,7 @@ describe('readMap / writeMap round-trip', () => {
   test('label survives write → read with key fields intact', () => {
     const input = makeMapWithLabels();
 
-    MudletMapReader.write(input, tmpFile);
-    const result = MudletMapReader.read(tmpFile);
+    const result = MudletMapReader.readBuffer(MudletMapReader.writeBuffer(input));
 
     expect(result.labels[1]).toHaveLength(1);
     const label = result.labels[1][0];
@@ -102,10 +84,7 @@ describe('readMap / writeMap round-trip', () => {
     (input.rooms[1] as any).rawSpecialExits = { 99: ['legacy door'] };
 
     // Serialize at the low level to preserve the unprefixed rawSpecialExits
-    const buf = QUserType.get('MudletMap').from(input).toBuffer(true);
-    fs.writeFileSync(tmpFile, buf);
-
-    const result = MudletMapReader.read(tmpFile);
+    const result = readMapFromBuffer(QUserType.get('MudletMap').from(input).toBuffer(true));
 
     expect(result.rooms[1].mSpecialExits).toEqual({ 'legacy door': 99 });
     expect(result.rooms[1].mSpecialExitLocks).toEqual([]);
@@ -114,8 +93,7 @@ describe('readMap / writeMap round-trip', () => {
   test('multi-area map preserves all areas and room assignments', () => {
     const input = makeMultiAreaMap();
 
-    MudletMapReader.write(input, tmpFile);
-    const result = MudletMapReader.read(tmpFile);
+    const result = MudletMapReader.readBuffer(MudletMapReader.writeBuffer(input));
 
     expect(result.areaNames[1]).toBe('Test Area');
     expect(result.areaNames[2]).toBe('Second Area');
@@ -481,7 +459,7 @@ describe('rebuildRoomHashIndex on write', () => {
   test('duplicate hashes on two rooms: last wins and a warning is logged', () => {
     const input = makeMapWithHashes();
     input.rooms[3].hash = 'hash-room-1'; // collides with room 1
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       const result = roundTrip(input);
       // writeBuffer iterates room ids in insertion order (1, 2, 3); 3 overwrites 1

@@ -9,9 +9,7 @@ import * as mapOps from './map-operations';
 import readerExportFn from './reader-export';
 import exportMapFn from './json-export';
 
-export const readMap = mapOps.readMap;
 export const readMapFromBuffer = mapOps.readMapFromBuffer;
-export const writeMap = mapOps.writeMap;
 export const writeMapToBuffer = mapOps.writeMapToBuffer;
 export const readerExport = readerExportFn;
 export const exportMap = exportMapFn;
@@ -20,9 +18,7 @@ export * from './types';
 
 /** Convenience namespace for reading, writing, and exporting Mudlet map files. */
 export const MudletMapReader = {
-  read: mapOps.readMap,
   readBuffer: mapOps.readMapFromBuffer,
-  write: mapOps.writeMap,
   writeBuffer: mapOps.writeMapToBuffer,
   export: readerExportFn,
   exportJson: exportMapFn,

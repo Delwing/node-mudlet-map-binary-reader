@@ -151,7 +151,7 @@ function convertRoom(roomId: number, room: MudletRoom, hash?: string): RendererR
 }
 
 function convertLabel(label: MudletLabel): RendererLabel {
-  const pixMap = Buffer.from(label.pixMap as Buffer).toString('base64');
+  const pixMap = Buffer.from(label.pixMap as Uint8Array).toString('base64');
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const { spec: _fSpec, pad: _fPad, ...fgColor } = label.fgColor;

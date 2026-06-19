@@ -1,7 +1,10 @@
-import { QClass, QInt, QDouble, QUInt, QString as QStringBroken } from 'qtdatastream/src/types';
+import { QClass, QInt, QDouble, QUInt, QString as QStringBroken } from 'qtdatastream/types';
 import type { ReadBuffer } from 'qtdatastream';
 
 import type { MudletColor, MudletFont } from '../types';
+
+const toHex = (u8: Uint8Array): string =>
+  Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 
 class QEnum extends QClass {
   static override read(buffer: ReadBuffer): number {
@@ -44,7 +47,7 @@ export class QColor extends QClass {
 
   override toBuffer(): Buffer {
     const color = this.__obj as MudletColor;
-    const bufs: Buffer[] = [];
+    const bufs: Uint8Array[] = [];
     bufs.push(QEnum.from(color.spec).toBuffer(false));
     bufs.push(QUint16.from(color.alpha * 257).toBuffer(false));
     bufs.push(QUint16.from(color.r * 257).toBuffer(false));
@@ -56,7 +59,7 @@ export class QColor extends QClass {
 }
 
 export class QString extends QStringBroken {
-  override toBuffer(): Buffer {
+  override toBuffer(): Uint8Array {
     if (this.__obj === '') {
       return QUInt.from(0xffffffff).toBuffer();
     }
@@ -176,14 +179,14 @@ export class QVector extends QClass {
  * Supports .pngs
  */
 export class QPixMap extends QClass {
-  static override read(buffer: ReadBuffer): Buffer | string {
+  static override read(buffer: ReadBuffer): Uint8Array | string {
     QUInt.read(buffer);
     const start = buffer.read_offset;
-    if (buffer.slice(4).toString('hex') !== '89504e47') {
+    if (toHex(buffer.slice(4)) !== '89504e47') {
       buffer.read_offset -= 4;
       return '';
     }
-    while (buffer.slice(4).toString('hex') !== '49454e44') {
+    while (toHex(buffer.slice(4)) !== '49454e44') {
       buffer.read_offset -= 3;
     }
     const end = buffer.read_offset;
@@ -193,7 +196,7 @@ export class QPixMap extends QClass {
   }
 
   override toBuffer(): Buffer {
-    const data = this.__obj as Buffer | string;
-    return Buffer.concat([QUInt.from(1).toBuffer(), data !== '' ? (data as Buffer) : Buffer.from('')]);
+    const data = this.__obj as Uint8Array | string;
+    return Buffer.concat([QUInt.from(1).toBuffer(), data !== '' ? (data as Uint8Array) : Buffer.from('')]);
   }
 }

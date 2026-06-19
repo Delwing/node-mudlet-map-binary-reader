@@ -1,7 +1,7 @@
 'use strict';
 
 import { buffer } from 'qtdatastream';
-import { QClass, QUInt, QInt } from 'qtdatastream/src/types';
+import { QClass, QUInt, QInt } from 'qtdatastream/types';
 import { QMap, QMultiMap } from '../src/models/qstream-containers';
 import { QPoint, QPixMap, QString } from '../src/models/qstream-types';
 
@@ -49,10 +49,12 @@ describe('qstream-types', () => {
       // QPixMap.toBuffer writes QUInt(1) + raw data
       const serialized = QPixMap.from(pngData).toBuffer();
       const result = QPixMap.read(new ReadBuffer(serialized));
-      // Result should be a Buffer containing the full PNG (header through IEND + 4 bytes for CRC/trailing)
-      expect(Buffer.isBuffer(result)).toBe(true);
+      // Result should be a Uint8Array containing the full PNG (header through IEND + 4 bytes for CRC/trailing)
+      expect(result instanceof Uint8Array).toBe(true);
       // The extracted data should start with the PNG header
-      expect((result as Buffer).subarray(0, 4).toString('hex')).toBe('89504e47');
+      expect(
+        Array.from((result as Uint8Array).subarray(0, 4), (b) => b.toString(16).padStart(2, '0')).join('')
+      ).toBe('89504e47');
     });
 
     test('toBuffer with empty string produces QUInt(1) + empty', () => {
