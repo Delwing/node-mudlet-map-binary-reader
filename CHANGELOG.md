@@ -1,5 +1,8 @@
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+# 1.0.2
+- drop the `lodash` runtime dependency (and `@types/lodash`), resolving 3 Dependabot advisories (1 high `_.template` code injection, 2 `_.unset`/`_.omit` prototype pollution) that flagged the pinned, deprecated `lodash@4.18.0`. The handful of uses (`cloneDeep`, `map`, `isEmpty`, `find`, `flatMap`) are now native JS (`structuredClone`, `Object.entries`/`Object.values`, `Array` methods, a small local `isEmpty`). No API or output change; all 99 tests pass. The library now has a single runtime dependency (`qtdatastream-web`).
+
 # 1.0.1
 - **the library is now fully browser-pure** — no remaining dependency on Node's global `Buffer` on any path (read, export, *and* write). Previously `export()`/`exportJson` and `writeBuffer` threw `ReferenceError: Buffer is not defined` in the browser.
   - label `pixMap` base64 now uses a dependency-free encoder (`src/base64.ts`) instead of `Buffer.from(...).toString('base64')`.

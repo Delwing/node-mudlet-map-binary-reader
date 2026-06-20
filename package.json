@@ -1,6 +1,6 @@
 {
   "name": "mudlet-map-binary-reader",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "keywords": [
     "mudlet",
@@ -33,12 +33,10 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "lodash": "4.18.0",
     "qtdatastream-web": "^0.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/lodash": "^4.14.0",
     "@types/node": "^20.0.0",
     "eslint": "^10.2.0",
     "tsdown": "^0.22.2",

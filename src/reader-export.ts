@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import type { MudletColor, MudletLabel, MudletMap, MudletRoom } from './types';
 import mudletColors from '../mudlet-colors.json';
 import { uint8ToBase64 } from './base64';
@@ -239,7 +238,7 @@ function generateColors(map: MudletMap): { envId: number; colors: number[] }[] {
  * tool of choice (`fs.writeFileSync`, a `Blob`, an HTTP response, …).
  */
 export default function readerExport(mapModel: MudletMap): RendererExport {
-  const map = _.cloneDeep(mapModel);
+  const map = structuredClone(mapModel);
   const mapData: RendererArea[] = [];
   const roomToHash = Object.entries(map.mpRoomDbHashToRoomId).reduce<Record<number, string>>(
     (acc, [key, value]) => {

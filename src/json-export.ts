@@ -1,6 +1,13 @@
-import _ from 'lodash';
 import type { MudletArea, MudletColor, MudletLabel, MudletMap } from './types';
 import { uint8ToBase64 } from './base64';
+
+/** Mirror of lodash `_.isEmpty` for the null/array/object values used here. */
+function isEmpty(value: unknown): boolean {
+  if (value == null) return true;
+  if (Array.isArray(value) || typeof value === 'string') return value.length === 0;
+  if (typeof value === 'object') return Object.keys(value as object).length === 0;
+  return true;
+}
 
 const directions = [
   'north',
@@ -140,7 +147,7 @@ function convertCustomLine(
   color: MudletColor | undefined,
   style: number | undefined
 ): CustomLineOutput | undefined {
-  if (coordinates === undefined || _.isEmpty(coordinates) || color === undefined) {
+  if (coordinates === undefined || isEmpty(coordinates) || color === undefined) {
     return undefined;
   }
   return {
@@ -195,7 +202,7 @@ function convertRoom(roomId: number, map: MudletMap): RoomOutput {
         exitId: destId,
         name: direction,
         weight: getExitWeight(shortDirection, room.exitWeights, 1),
-        locked: _.find(room.exitLocks, (num) => i === num - 1) ? true : undefined,
+        locked: room.exitLocks?.find((num) => i === num - 1) ? true : undefined,
         door: room.doors[shortDirection] !== undefined ? doorMap[room.doors[shortDirection]] : undefined,
         customLine: convertCustomLine(
           room.customLines[shortDirection],
@@ -213,7 +220,7 @@ function convertRoom(roomId: number, map: MudletMap): RoomOutput {
       name: specialExit,
       exitId: destId,
       weight: getExitWeight(specialExit, room.exitWeights, 1),
-      locked: _.find(room.mSpecialExitLocks, (destinationRoom) => destId === destinationRoom)
+      locked: room.mSpecialExitLocks?.find((destinationRoom) => destId === destinationRoom)
         ? true
         : undefined,
       door: room.doors[specialExit] !== undefined ? doorMap[room.doors[specialExit]] : undefined,
@@ -237,7 +244,7 @@ function convertRoom(roomId: number, map: MudletMap): RoomOutput {
     hash: room.hash,
     exits,
     stubExits: convertStubExits(room.stubs, room.doors),
-    userData: _.isEmpty(room.userData) ? undefined : room.userData,
+    userData: isEmpty(room.userData) ? undefined : room.userData,
   };
 }
 
@@ -248,23 +255,23 @@ function convertArea(area: MudletArea, areaid: string, map: MudletMap): AreaOutp
     name: map.areaNames[id] ?? '',
     gridMode: area.gridMode ? true : undefined,
     roomCount: area.rooms.length,
-    rooms: _.map(area.rooms, (roomId) => convertRoom(roomId, map)).sort((a, b) => a.id - b.id),
+    rooms: area.rooms.map((roomId) => convertRoom(roomId, map)).sort((a, b) => a.id - b.id),
   };
-  if (!_.isEmpty(area.userData)) {
+  if (!isEmpty(area.userData)) {
     converted.userData = area.userData;
   }
-  if (!_.isEmpty(map.labels[id])) {
-    converted.labels = _.map(map.labels[id], convertLabel);
+  if (!isEmpty(map.labels[id])) {
+    converted.labels = map.labels[id].map(convertLabel);
   }
   return converted;
 }
 
 function convertMapToMudletFormat(map: MudletMap): MapOutput {
-  const areas = _.map(map.areas, (area, areaid) => convertArea(area, areaid, map)).sort(
-    (a, b) => a.id - b.id
-  );
+  const areas = Object.entries(map.areas)
+    .map(([areaid, area]) => convertArea(area, areaid, map))
+    .sort((a, b) => a.id - b.id);
 
-  const customEnvColors = _.map(map.mCustomEnvColors, (color, index) => {
+  const customEnvColors = Object.entries(map.mCustomEnvColors).map(([index, color]) => {
     const converted = convertColor(color);
     return { ...converted, id: parseInt(index) };
   });
@@ -278,11 +285,11 @@ function convertMapToMudletFormat(map: MudletMap): MapOutput {
 
   return {
     formatVersion: 1.0,
-    ...(_.isEmpty(map.mUserData) ? {} : { userData: map.mUserData }),
+    ...(isEmpty(map.mUserData) ? {} : { userData: map.mUserData }),
     areas,
     areaCount: Object.keys(map.areas).length,
     roomCount: Object.keys(map.rooms).length,
-    labelCount: _.flatMap(map.labels, (label) => label).length,
+    labelCount: Object.values(map.labels).flat().length,
     defaultAreaName: 'Default Area',
     anonymousAreaName: 'Unnamed Area',
     envToColorMapping: map.envColors,
