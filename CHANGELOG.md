@@ -1,4 +1,12 @@
-# 0.11.0
+This project adheres to [Semantic Versioning](https://semver.org/).
+
+# 1.0.0
+First stable release. Contains breaking changes — see below.
+
+- **(breaking)** migrate Qt serialization to the published `qtdatastream-web` package; drop the bundled `qtdatastream.d.ts` typings. The library now ships as ESM only, bundled with `tsdown` and tested with Vitest.
+- **(breaking)** version-keyed map model registry: reads dispatch on the map's on-disk format version and writes on `map.version`; an unsupported version now throws a clear error instead of silently mis-parsing. v20 is the supported version, and `MudletMap` remains the canonical, version-agnostic model.
+
+# 0.9.0
 - recompute `mAreaExits` on every `writeMap` / `writeMapToBuffer` call so cross-area routing data stays in sync with the room graph. Mirrors Mudlet's `TArea::determineAreaExits`: cardinal exits encode as `[targetId, DIR_*]` with DIR_NORTH=1..DIR_OUT=12, string-named special exits encode as `[targetId, DIR_OTHER=13]`, and dangling or same-area exits are excluded.
 - recompute per-area spatial extents (`zLevels`, `min_x`/`max_x`/`min_y`/`max_y`/`min_z`/`max_z`, and the per-Z `xminForZ`/`xmaxForZ`/`yminForZ`/`ymaxForZ` maps) on every `writeMap` / `writeMapToBuffer` call so Mudlet's renderer gets the right bounding box and Z-level list after any editor mutation. Mirrors `TArea::calcSpan` in Mudlet's `src/TArea.cpp`, including two C++ quirks: y is negated when stored on the area (`area.min_y = -room.y`), and the `span` / `pos` `QVector3D` fields are deliberately left untouched because C++ never writes them either. Areas with zero rooms have their per-Z maps and `zLevels` cleared but their min/max preserved, again matching C++.
 - recompute `mpRoomDbHashToRoomId` on every `writeMap` / `writeMapToBuffer` call so the room content-hash index stays in sync with the room graph. Mirrors `TRoomDB::hashToRoomID` in Mudlet's C++ source. On load, `room.hash` is populated from the inverse of the on-disk index (the binary format carries hashes only on the map, not per room), so callers can treat `room.hash` as the source of truth. On save, the index is rebuilt from each room's `hash` field: rooms with `undefined` / `''` / `null` are skipped, and colliding hashes log a warning with last-write-wins. `mRoomIdHash` (per-profile player cursor) is deliberately left alone — do not confuse the two.
@@ -12,6 +20,12 @@
 
 # 0.7.3
 - fix export for Mudlet Map Renderer
+
+# 0.7.2
+- add area ID to reader-export room output and preserve it through export
+
+# 0.7.1
+- include `mudlet-colors.json` in the published package files
 
 # 0.7.0
 - complete TS rewrite. !!! Broken export for Mudlet Map Renderer !!!

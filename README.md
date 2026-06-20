@@ -2,22 +2,11 @@
 
 [![NPM](https://nodei.co/npm/mudlet-map-binary-reader.png)](https://nodei.co/npm/mudlet-map-binary-reader/)
 
-Reads Mudlet's map binary file (v20 only!). Can output .js/.json files needed for Mudlet Map Reader.
-Mudlet map JSON format export is also available.
+Reads and writes Mudlet's map binary file (v20). Can also convert a map to the [JS Mudlet Map Renderer](https://github.com/Delwing/js-mudlet-map-renderer) format or to Mudlet's JSON format.
 
-*API until version `1.0.0` is subject to change! Use with caution.*
+The library works with **bytes** and never touches the filesystem — you handle reading and writing files yourself.
 
-I am no Node developer, so any hints and suggestions are more then welcome.
-
-## TODOs and plans
-
-- [x] Convert to .ts
-- [x] Document map model
-- [x] Document classes
-- [x] Add Mudlet's JSON exporter
-- [x] Correct QFont read
-- [x] Add test
-- [x] Add linting
+This project follows [Semantic Versioning](https://semver.org/).
 
 ## Usage
 
@@ -79,29 +68,35 @@ writeFileSync("map-modified.dat", bytes);
 
 ### Exporting for JS Mudlet Map Renderer
 
-Exports the map into the format used by [js-mudlet-map-renderer](https://github.com/Delwing/js-mudlet-map-renderer).
+Converts the map into the data structure used by [js-mudlet-map-renderer](https://github.com/Delwing/js-mudlet-map-renderer). It returns the data — persisting it is up to you.
 
 ```ts
+import { writeFileSync } from "node:fs";
+
 const map = MudletMapReader.readBuffer(readFileSync("map.dat"));
 
-// Without a directory — returns data without writing files
 const { mapData, colors } = MudletMapReader.export(map);
 console.log(`Exported ${mapData.length} areas, ${colors.length} colors`);
 
-// With a directory — also writes mapExport.js, colors.js, mapExport.json, colors.json
-MudletMapReader.export(map, "output");
+// Persist however you like:
+writeFileSync("mapExport.json", JSON.stringify(mapData));
+writeFileSync("colors.json", JSON.stringify(colors));
 ```
 
 ### Exporting to Mudlet JSON format
 
+`exportJson` returns the JSON as a string — write it out yourself.
+
 ```ts
+import { writeFileSync } from "node:fs";
+
 const map = MudletMapReader.readBuffer(readFileSync("map.dat"));
 
 // Pretty-printed
-MudletMapReader.exportJson(map, "map.json");
+writeFileSync("map.json", MudletMapReader.exportJson(map));
 
 // Minified
-MudletMapReader.exportJson(map, "map.min.json", true);
+writeFileSync("map.min.json", MudletMapReader.exportJson(map, true));
 ```
 
 ### Working with areas and labels
