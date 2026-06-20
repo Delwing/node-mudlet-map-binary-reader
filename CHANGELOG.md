@@ -1,5 +1,11 @@
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+# 1.0.3
+- **~3.3× faster decode** of maps with labels (Arkadia map: `readBuffer` + `export` ~857 ms → ~261 ms), via two fixes:
+  - `readBuffer` ~590 ms → ~90 ms: `QPixMap.read` found each embedded PNG's end by scanning byte-by-byte and hex-stringifying a fresh 4-byte slice at every position (`toHex`) — hundreds of millions of tiny allocations across all labels. Replaced with allocation-free `readUInt32BE()` integer compares against the PNG magic (`0x89504e47`) and `IEND` (`0x49454e44`) markers. Identical behavior, no hot-loop allocations.
+  - `export()` ~267 ms → ~175 ms: dropped the defensive `structuredClone` of the whole map model. The export is a read-only pass that builds entirely new output objects, so the deep copy was pure overhead. **Note:** the returned export now shares nested values (`userData`, `doors`, `stubs`, …) by reference with the input model — treat both as read-only after the call (output *values* are unchanged; verified byte-identical).
+- No public API change; all 99 tests pass.
+
 # 1.0.2
 - drop the `lodash` runtime dependency (and `@types/lodash`), resolving 3 Dependabot advisories (1 high `_.template` code injection, 2 `_.unset`/`_.omit` prototype pollution) that flagged the pinned, deprecated `lodash@4.18.0`. The handful of uses (`cloneDeep`, `map`, `isEmpty`, `find`, `flatMap`) are now native JS (`structuredClone`, `Object.entries`/`Object.values`, `Array` methods, a small local `isEmpty`). No API or output change; all 99 tests pass. The library now has a single runtime dependency (`qtdatastream-web`).
 

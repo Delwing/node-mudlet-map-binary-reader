@@ -4,9 +4,6 @@ import { concat, fromInt8, fromUint16BE } from 'qtdatastream-web/bytes';
 
 import type { MudletColor, MudletFont } from '../types';
 
-const toHex = (u8: Uint8Array): string =>
-  Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
-
 class QEnum extends QClass {
   static override read(buffer: ReadBuffer): number {
     return buffer.readInt8();
@@ -167,11 +164,15 @@ export class QPixMap extends QClass {
   static override read(buffer: ReadBuffer): Uint8Array | string {
     QUInt.read(buffer);
     const start = buffer.read_offset;
-    if (toHex(buffer.slice(4)) !== '89504e47') {
+    // Find where the embedded PNG ends by scanning for its IEND chunk. Compare
+    // the 4-byte windows as big-endian uint32s (PNG magic 0x89504e47, IEND
+    // 0x49454e44) — readUInt32BE consumes 4 bytes like slice(4) did, but with
+    // no per-byte array/string allocation (this loop dominated readBuffer).
+    if (buffer.readUInt32BE() !== 0x89504e47) {
       buffer.read_offset -= 4;
       return '';
     }
-    while (toHex(buffer.slice(4)) !== '49454e44') {
+    while (buffer.readUInt32BE() !== 0x49454e44) {
       buffer.read_offset -= 3;
     }
     const end = buffer.read_offset;

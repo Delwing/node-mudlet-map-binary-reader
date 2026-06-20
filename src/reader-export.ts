@@ -238,7 +238,12 @@ function generateColors(map: MudletMap): { envId: number; colors: number[] }[] {
  * tool of choice (`fs.writeFileSync`, a `Blob`, an HTTP response, …).
  */
 export default function readerExport(mapModel: MudletMap): RendererExport {
-  const map = structuredClone(mapModel);
+  // Read-only pass: every output object is freshly built (see convertRoom /
+  // convertLabel / generateColors), so we don't deep-clone the input — that
+  // clone was ~75% of this function's cost. Nested values the output spreads
+  // through (`userData`, `doors`, `stubs`, …) are shared by reference with the
+  // input model; treat both model and export as read-only after this call.
+  const map = mapModel;
   const mapData: RendererArea[] = [];
   const roomToHash = Object.entries(map.mpRoomDbHashToRoomId).reduce<Record<number, string>>(
     (acc, [key, value]) => {
