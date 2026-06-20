@@ -1,5 +1,6 @@
 import { QClass, QInt, QUserType } from 'qtdatastream-web/types';
 import type { ReadBuffer } from 'qtdatastream-web';
+import { concat } from 'qtdatastream-web/bytes';
 
 import type { MudletArea, MudletLabel, MudletRoom } from '../types';
 
@@ -26,7 +27,7 @@ export function createMudletLabels(labelType: string): typeof QClass {
       return labels;
     }
 
-    override toBuffer(): Buffer {
+    override toBuffer(): Uint8Array {
       const obj = this.__obj as Record<number, MudletLabel[]>;
       const buffers: Uint8Array[] = [];
       buffers.push(QInt.from(Object.keys(obj).length).toBuffer());
@@ -38,7 +39,7 @@ export function createMudletLabels(labelType: string): typeof QClass {
           buffers.push(QUserType.get(labelType).from(label).toBuffer(true));
         }
       }
-      return Buffer.concat(buffers);
+      return concat(buffers);
     }
   } as unknown as typeof QClass;
 }
@@ -56,7 +57,7 @@ export function createMudletAreas(areaType: string): typeof QClass {
       return areas;
     }
 
-    override toBuffer(): Buffer {
+    override toBuffer(): Uint8Array {
       const obj = this.__obj as Record<number, MudletArea>;
       const buffers: Uint8Array[] = [];
       buffers.push(QInt.from(Object.keys(obj).length).toBuffer());
@@ -66,7 +67,7 @@ export function createMudletAreas(areaType: string): typeof QClass {
         buffers.push(QInt.from(parseInt(key)).toBuffer());
         buffers.push(QUserType.get(areaType).from(area).toBuffer(true));
       }
-      return Buffer.concat(buffers);
+      return concat(buffers);
     }
   } as unknown as typeof QClass;
 }
@@ -83,14 +84,14 @@ export function createMudletRooms(roomType: string): typeof QClass {
       return rooms;
     }
 
-    override toBuffer(): Buffer {
+    override toBuffer(): Uint8Array {
       const obj = this.__obj as Record<number, MudletRoom>;
       const buffers: Uint8Array[] = [];
       for (const [key, room] of Object.entries(obj).reverse()) {
         buffers.push(QInt.from(parseInt(key)).toBuffer());
         buffers.push(QUserType.get(roomType).from(room).toBuffer(true));
       }
-      return Buffer.concat(buffers);
+      return concat(buffers);
     }
   } as unknown as typeof QClass;
 }

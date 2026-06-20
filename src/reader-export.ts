@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import type { MudletColor, MudletLabel, MudletMap, MudletRoom } from './types';
 import mudletColors from '../mudlet-colors.json';
+import { uint8ToBase64 } from './base64';
 
 const roomExits = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest', 'up', 'down', 'in', 'out'] as const;
 type RoomExit = (typeof roomExits)[number];
@@ -151,7 +152,7 @@ function convertRoom(roomId: number, room: MudletRoom, hash?: string): RendererR
 }
 
 function convertLabel(label: MudletLabel): RendererLabel {
-  const pixMap = Buffer.from(label.pixMap as Uint8Array).toString('base64');
+  const pixMap = uint8ToBase64(label.pixMap as Uint8Array);
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
   const { spec: _fSpec, pad: _fPad, ...fgColor } = label.fgColor;

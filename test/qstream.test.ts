@@ -102,7 +102,7 @@ describe('qstream-containers', () => {
 
       const buf = QMapIntInt.from(input).toBuffer();
       // First 4 bytes should be the count (3)
-      expect(buf.readUInt32BE(0)).toBe(3);
+      expect(new DataView(buf.buffer, buf.byteOffset, buf.byteLength).getUint32(0)).toBe(3);
     });
   });
 
@@ -128,7 +128,7 @@ describe('qstream-containers', () => {
 
       const buf = QMultiMapStringInt.from(input).toBuffer();
       // First 4 bytes = count
-      expect(buf.readUInt32BE(0)).toBe(2);
+      expect(new DataView(buf.buffer, buf.byteOffset, buf.byteLength).getUint32(0)).toBe(2);
     });
   });
 });

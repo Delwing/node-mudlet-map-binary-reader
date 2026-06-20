@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { qtype, QClass, QUInt } from 'qtdatastream-web/types';
 import type { ReadBuffer } from 'qtdatastream-web';
+import { concat } from 'qtdatastream-web/bytes';
 
 let customCounter = 1000;
 const customMapCache: Record<string, Record<string, number>> = {};
@@ -39,7 +40,7 @@ function createTypedMultiMap(keyClass: typeof QClass, valueClass: typeof QClass)
       return map;
     }
 
-    override toBuffer(): Buffer {
+    override toBuffer(): Uint8Array {
       const bufs: Uint8Array[] = [];
       const obj = this.__obj;
       if (obj instanceof Map) {
@@ -59,7 +60,7 @@ function createTypedMultiMap(keyClass: typeof QClass, valueClass: typeof QClass)
         }
         bufs.unshift(QUInt.from(counter).toBuffer());
       }
-      return Buffer.concat(bufs);
+      return concat(bufs);
     }
   } as unknown as typeof QClass;
 }
@@ -76,7 +77,7 @@ function createTypedMap(keyClass: typeof QClass, valueClass: typeof QClass): typ
       return map;
     }
 
-    override toBuffer(): Buffer {
+    override toBuffer(): Uint8Array {
       const bufs: Uint8Array[] = [];
       const obj = this.__obj;
       if (obj instanceof Map) {
@@ -93,7 +94,7 @@ function createTypedMap(keyClass: typeof QClass, valueClass: typeof QClass): typ
           bufs.push(valueClass.from(value).toBuffer());
         }
       }
-      return Buffer.concat(bufs);
+      return concat(bufs);
     }
   } as unknown as typeof QClass;
 }
@@ -109,14 +110,14 @@ function createTypedList(valueClass: typeof QClass): typeof QClass {
       return list;
     }
 
-    override toBuffer(): Buffer {
+    override toBuffer(): Uint8Array {
       const bufs: Uint8Array[] = [];
       const arr = this.__obj as any[];
       bufs.push(QUInt.from(arr.length).toBuffer());
       for (const el of arr) {
         bufs.push(valueClass.from(el).toBuffer());
       }
-      return Buffer.concat(bufs);
+      return concat(bufs);
     }
   } as unknown as typeof QClass;
 }
@@ -127,9 +128,9 @@ function createTypedPair(first: typeof QClass, second: typeof QClass): typeof QC
       return [first.read(buffer), second.read(buffer)];
     }
 
-    override toBuffer(): Buffer {
+    override toBuffer(): Uint8Array {
       const pair = this.__obj as [any, any];
-      return Buffer.concat([first.from(pair[0]).toBuffer(), second.from(pair[1]).toBuffer()]);
+      return concat([first.from(pair[0]).toBuffer(), second.from(pair[1]).toBuffer()]);
     }
   } as unknown as typeof QClass;
 }

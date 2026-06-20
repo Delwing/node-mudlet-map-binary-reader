@@ -1,5 +1,11 @@
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+# 1.0.1
+- **the library is now fully browser-pure** — no remaining dependency on Node's global `Buffer` on any path (read, export, *and* write). Previously `export()`/`exportJson` and `writeBuffer` threw `ReferenceError: Buffer is not defined` in the browser.
+  - label `pixMap` base64 now uses a dependency-free encoder (`src/base64.ts`) instead of `Buffer.from(...).toString('base64')`.
+  - the qstream/Mudlet serializers (`toBuffer()` in `qstream-types.ts`, `qstream-containers.ts`, `mudlet-types.ts`) build `Uint8Array`s via `qtdatastream-web/bytes` (`concat` / `fromInt8` / `fromUint16BE`) instead of `Buffer.alloc` / `Buffer.concat` / `Buffer.from`.
+  - `writeBuffer` now returns a plain `Uint8Array`. Output is byte-for-byte identical to the previous `Buffer`-based serialization (verified by round-tripping the real 7.8 MB map with `globalThis.Buffer` nulled — same byte length, re-reads identically).
+
 # 1.0.0
 First stable release. Contains breaking changes — see below.
 

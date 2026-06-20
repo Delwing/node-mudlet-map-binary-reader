@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import type { MudletArea, MudletColor, MudletLabel, MudletMap } from './types';
+import { uint8ToBase64 } from './base64';
 
 const directions = [
   'north',
@@ -173,7 +174,7 @@ function convertLabel(label: MudletLabel): LabelOutput {
     colors: [convertColor(label.fgColor), convertColor(label.bgColor)],
     coordinates: [label.pos[0], label.pos[1], label.pos[2]],
     id: label.id,
-    image: chunkString(Buffer.from(label.pixMap as Uint8Array).toString('base64'), 64),
+    image: chunkString(uint8ToBase64(label.pixMap as Uint8Array), 64),
     scaledels: !label.noScaling,
     showOnTop: label.showOnTop,
     text: label.text,

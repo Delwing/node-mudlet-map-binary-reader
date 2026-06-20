@@ -1,5 +1,6 @@
 import { QClass, QInt, QDouble, QUInt, QString as QStringBroken } from 'qtdatastream-web/types';
 import type { ReadBuffer } from 'qtdatastream-web';
+import { concat, fromInt8, fromUint16BE } from 'qtdatastream-web/bytes';
 
 import type { MudletColor, MudletFont } from '../types';
 
@@ -11,10 +12,8 @@ class QEnum extends QClass {
     return buffer.readInt8();
   }
 
-  override toBuffer(): Buffer {
-    const buf = Buffer.alloc(1);
-    buf.writeInt8(this.__obj as number, 0);
-    return buf;
+  override toBuffer(): Uint8Array {
+    return fromInt8(this.__obj as number);
   }
 }
 
@@ -23,10 +22,8 @@ class QUint16 extends QClass {
     return buffer.readUInt16BE();
   }
 
-  override toBuffer(): Buffer {
-    const buf = Buffer.alloc(2);
-    buf.writeUInt16BE(this.__obj as number);
-    return buf;
+  override toBuffer(): Uint8Array {
+    return fromUint16BE(this.__obj as number);
   }
 }
 
@@ -45,7 +42,7 @@ export class QColor extends QClass {
     };
   }
 
-  override toBuffer(): Buffer {
+  override toBuffer(): Uint8Array {
     const color = this.__obj as MudletColor;
     const bufs: Uint8Array[] = [];
     bufs.push(QEnum.from(color.spec).toBuffer(false));
@@ -54,7 +51,7 @@ export class QColor extends QClass {
     bufs.push(QUint16.from(color.g * 257).toBuffer(false));
     bufs.push(QUint16.from(color.b * 257).toBuffer(false));
     bufs.push(QUint16.from((color.pad ?? 0) * 257).toBuffer(false));
-    return Buffer.concat(bufs);
+    return concat(bufs);
   }
 }
 
@@ -114,37 +111,25 @@ export class QFont extends QClass {
     };
   }
 
-  override toBuffer(): Buffer {
+  override toBuffer(): Uint8Array {
     const f = this.__obj as MudletFont;
 
-    const buf8Int = (el: number): Buffer => {
-      const buf = Buffer.alloc(1);
-      buf.writeInt8(el);
-      return buf;
-    };
-
-    const bufUInt16BE = (el: number): Buffer => {
-      const buf = Buffer.alloc(2);
-      buf.writeUint16BE(el);
-      return buf;
-    };
-
-    return Buffer.concat([
+    return concat([
       QString.from(f.family).toBuffer(),
       QString.from(f.style).toBuffer(),
       QDouble.from(f.pointSize).toBuffer(),
       QInt.from(f.pixelSize).toBuffer(),
       QEnum.from(f.styleHint).toBuffer(),
       QUint16.from(f.styleStrategy).toBuffer(),
-      Buffer.alloc(1),
-      buf8Int(f.weight),
-      buf8Int(f.fontBits),
-      bufUInt16BE(f.stretch),
-      buf8Int(f.extendedFontBits),
+      new Uint8Array(1),
+      fromInt8(f.weight),
+      fromInt8(f.fontBits),
+      fromUint16BE(f.stretch),
+      fromInt8(f.extendedFontBits),
       QInt.from(f.letterSpacing).toBuffer(),
       QInt.from(f.wordSpacing).toBuffer(),
-      buf8Int(f.hintingPreference),
-      buf8Int(f.capital),
+      fromInt8(f.hintingPreference),
+      fromInt8(f.capital),
     ]);
   }
 }
@@ -154,9 +139,9 @@ export class QPoint extends QClass {
     return [QDouble.read(buffer), QDouble.read(buffer)];
   }
 
-  override toBuffer(): Buffer {
+  override toBuffer(): Uint8Array {
     const [x, y] = this.__obj as [number, number];
-    return Buffer.concat([QDouble.from(x).toBuffer(), QDouble.from(y).toBuffer()]);
+    return concat([QDouble.from(x).toBuffer(), QDouble.from(y).toBuffer()]);
   }
 }
 
@@ -165,9 +150,9 @@ export class QVector extends QClass {
     return [QDouble.read(buffer), QDouble.read(buffer), QDouble.read(buffer)];
   }
 
-  override toBuffer(): Buffer {
+  override toBuffer(): Uint8Array {
     const [x, y, z] = this.__obj as [number, number, number];
-    return Buffer.concat([
+    return concat([
       QDouble.from(x).toBuffer(),
       QDouble.from(y).toBuffer(),
       QDouble.from(z).toBuffer(),
@@ -195,8 +180,8 @@ export class QPixMap extends QClass {
     return buffer.slice(size + 4);
   }
 
-  override toBuffer(): Buffer {
+  override toBuffer(): Uint8Array {
     const data = this.__obj as Uint8Array | string;
-    return Buffer.concat([QUInt.from(1).toBuffer(), data !== '' ? (data as Uint8Array) : Buffer.from('')]);
+    return concat([QUInt.from(1).toBuffer(), data !== '' ? (data as Uint8Array) : new Uint8Array(0)]);
   }
 }
