@@ -5,3 +5,4 @@ tester
 dist
 coverage
 .claude
+*.tsbuildinfo

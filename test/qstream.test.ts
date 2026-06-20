@@ -1,7 +1,7 @@
 'use strict';
 
-import { buffer } from 'qtdatastream';
-import { QClass, QUInt, QInt } from 'qtdatastream/types';
+import { buffer } from 'qtdatastream-web';
+import { QClass, QUInt, QInt } from 'qtdatastream-web/types';
 import { QMap, QMultiMap } from '../src/models/qstream-containers';
 import { QPoint, QPixMap, QString } from '../src/models/qstream-types';
 

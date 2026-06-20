@@ -1,5 +1,6 @@
-import { buffer } from 'qtdatastream';
-import { QUserType } from './models/mudlet-models';
+import { buffer } from 'qtdatastream-web';
+import { QInt } from 'qtdatastream-web/types';
+import { getMapModel, getSupportedVersions } from './models/mudlet-models';
 import type { MudletMap, MudletRoom } from './types';
 
 const { ReadBuffer } = buffer;
@@ -257,14 +258,33 @@ function dehydrateSpecialExits(map: MudletMap): void {
 }
 
 /**
+ * Read just the leading version int, on a throwaway buffer, so we can pick the
+ * right version model before parsing the rest of the stream.
+ */
+function readMapVersion(buf: Uint8Array): number {
+  return QInt.read(new ReadBuffer(buf)) as number;
+}
+
+/**
  * Parse a Mudlet binary map from an in-memory buffer. Environment-
  * independent: no `fs`, no file path. Callers in Node can pass
  * `fs.readFileSync(path)`; callers in the browser can pass a `Buffer`
  * constructed from a `File` / `ArrayBuffer`.
+ *
+ * The format version (the first int in the stream) selects the model. An
+ * unsupported version fails fast with a clear error rather than silently
+ * mis-parsing a layout it doesn't match (reading a v16 map as v20 desyncs the
+ * stream and dies with an opaque "Invalid array length").
  */
 export function readMapFromBuffer(buf: Uint8Array): MudletMap {
-  const rb = new ReadBuffer(buf);
-  const map = QUserType.read(rb, 'MudletMap') as MudletMap;
+  const version = readMapVersion(buf);
+  const model = getMapModel(version);
+  if (!model) {
+    throw new Error(
+      `Unsupported Mudlet map version ${version}. Supported version(s): ${getSupportedVersions().join(', ')}.`
+    );
+  }
+  const map = model.read(new ReadBuffer(buf));
   hydrateSpecialExits(map);
   populateRoomHashes(map);
   return map;
@@ -277,9 +297,15 @@ export function readMapFromBuffer(buf: Uint8Array): MudletMap {
  * hand it to a `Blob` or HTTP response.
  */
 export function writeMapToBuffer(map: MudletMap): Uint8Array {
+  const model = getMapModel(map.version);
+  if (!model) {
+    throw new Error(
+      `Cannot write Mudlet map: unsupported version ${map.version}. Supported version(s): ${getSupportedVersions().join(', ')}.`
+    );
+  }
   dehydrateSpecialExits(map);
   rebuildAreaExits(map);
   rebuildAreaExtents(map);
   rebuildRoomHashIndex(map);
-  return QUserType.get('MudletMap').from(map).toBuffer(true);
+  return model.write(map);
 }

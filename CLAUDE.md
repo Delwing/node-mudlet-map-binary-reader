@@ -14,8 +14,9 @@ Node.js library for reading and writing Mudlet's binary map files (v20 format). 
 
 ## Common commands
 
-- `yarn build` — compile TypeScript (`tsc`, outputs to `dist/`)
-- `yarn test` — run Jest tests
+- `yarn build` — bundle the library (`tsdown`, outputs ESM + d.ts to `dist/`)
+- `yarn test` — run Vitest tests
+- `yarn typecheck` — type-check without emitting (`tsc --noEmit`)
 - `yarn lint` — run ESLint
 
 ## Project structure
@@ -24,7 +25,7 @@ Node.js library for reading and writing Mudlet's binary map files (v20 format). 
 src/
   index.ts              — public API (MudletMapReader namespace)
   types.ts              — exported TypeScript interfaces (MudletMap, MudletRoom, etc.)
-  map-operations.ts     — readMap / writeMap (binary read/write via qtdatastream)
+  map-operations.ts     — readMap / writeMap (binary read/write via qtdatastream-web)
   json-export.ts        — export map to JSON
   reader-export.ts      — export map to JS files for Mudlet Map Reader
   models/
@@ -32,23 +33,21 @@ src/
     mudlet-types.ts     — Mudlet-specific type readers/writers
     qstream-types.ts    — low-level Qt QDataStream type readers/writers
     qstream-containers.ts — Qt container (QList, QMap, etc.) readers/writers
-  typings/
-    qtdatastream.d.ts   — type declarations for the qtdatastream package
 test/
-  *.test.ts             — Jest tests
+  *.test.ts             — Vitest tests
   fixtures.ts           — test fixture factory functions
 ```
 
 ## Tech stack
 
-- TypeScript (strict mode, ES2022 target, CommonJS output)
-- Jest with ts-jest for testing
+- TypeScript (strict mode, ES2022 target, ESM output via `tsdown`)
+- Vitest for testing
 - ESLint with typescript-eslint
-- `qtdatastream` for Qt binary serialization
+- `qtdatastream-web` (published on npm) for Qt binary serialization
 
 ## Key conventions
 
-- Tests live in `test/` and match `**/test/**/*.test.ts`
+- Tests live in `test/` and match `*.test.ts` (see `vitest.config.ts`)
 - Test config uses a separate `tsconfig.test.json`
-- Published package includes only `dist/` (see `files` in package.json)
+- Published package includes only `dist/` and `mudlet-colors.json` (see `files` in package.json)
 - The binary format is Qt QDataStream — types are registered in `src/models/mudlet-models.ts`

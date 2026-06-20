@@ -1,5 +1,5 @@
-import { QClass, QInt, QDouble, QUInt, QString as QStringBroken } from 'qtdatastream/types';
-import type { ReadBuffer } from 'qtdatastream';
+import { QClass, QInt, QDouble, QUInt, QString as QStringBroken } from 'qtdatastream-web/types';
+import type { ReadBuffer } from 'qtdatastream-web';
 
 import type { MudletColor, MudletFont } from '../types';
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { qtype, QClass, QUInt } from 'qtdatastream/types';
-import type { ReadBuffer } from 'qtdatastream';
+import { qtype, QClass, QUInt } from 'qtdatastream-web/types';
+import type { ReadBuffer } from 'qtdatastream-web';
 
 let customCounter = 1000;
 const customMapCache: Record<string, Record<string, number>> = {};

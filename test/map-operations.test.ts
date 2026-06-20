@@ -1,7 +1,7 @@
 'use strict';
 
 import { MudletMapReader, readMapFromBuffer } from '../src';
-import { QUserType } from '../src/models/mudlet-models';
+import { getMapModel } from '../src/models/mudlet-models';
 import {
   makeMinimalMap,
   makeMinimalRoom,
@@ -83,8 +83,9 @@ describe('readBuffer / writeBuffer round-trip', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (input.rooms[1] as any).rawSpecialExits = { 99: ['legacy door'] };
 
-    // Serialize at the low level to preserve the unprefixed rawSpecialExits
-    const result = readMapFromBuffer(QUserType.get('MudletMap').from(input).toBuffer(true));
+    // Serialize via the v20 model directly (bypassing writeMapToBuffer's
+    // dehydrate/rebuild passes) to preserve the unprefixed rawSpecialExits.
+    const result = readMapFromBuffer(getMapModel(20)!.write(input));
 
     expect(result.rooms[1].mSpecialExits).toEqual({ 'legacy door': 99 });
     expect(result.rooms[1].mSpecialExitLocks).toEqual([]);
@@ -101,6 +102,24 @@ describe('readBuffer / writeBuffer round-trip', () => {
     expect(result.areas[2].rooms).toEqual(expect.arrayContaining([2, 3]));
     expect(result.rooms[2]).toMatchObject({ name: 'Room 2', area: 2 });
     expect(result.rooms[3]).toMatchObject({ name: 'Room 3', area: 2 });
+  });
+});
+
+describe('map version dispatch', () => {
+  test('reads a supported v20 map without throwing', () => {
+    const buf = MudletMapReader.writeBuffer(makeMinimalMap());
+    expect(() => readMapFromBuffer(buf)).not.toThrow();
+  });
+
+  test('throws a clear error for an unsupported map version', () => {
+    // writeBuffer always emits v20; the version is the leading big-endian
+    // int32, so bytes 0..3 are [0, 0, 0, 20]. Patch it to 16 to simulate an
+    // older map without needing a real v16 fixture.
+    const buf = MudletMapReader.writeBuffer(makeMinimalMap()).slice();
+    expect([buf[0], buf[1], buf[2], buf[3]]).toEqual([0, 0, 0, 20]);
+    buf[3] = 16;
+
+    expect(() => readMapFromBuffer(buf)).toThrow(/Unsupported Mudlet map version 16/);
   });
 });
 
