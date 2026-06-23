@@ -2,7 +2,7 @@
 
 [![NPM](https://nodei.co/npm/mudlet-map-binary-reader.png)](https://nodei.co/npm/mudlet-map-binary-reader/)
 
-Reads and writes Mudlet's map binary file (v20). Can also convert a map to the [JS Mudlet Map Renderer](https://github.com/Delwing/js-mudlet-map-renderer) format or to Mudlet's JSON format.
+Reads and writes Mudlet's map binary file (v20), and additionally reads the older formats v16–v19 (read-only). Can also convert a map to the [JS Mudlet Map Renderer](https://github.com/Delwing/js-mudlet-map-renderer) format or to Mudlet's JSON format.
 
 The library works with **bytes** and never touches the filesystem — you handle reading and writing files yourself.
 
