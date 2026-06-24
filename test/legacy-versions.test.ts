@@ -268,4 +268,25 @@ describe('legacy map versions 16-19', () => {
     // writeMapToBuffer dispatches on map.version; legacy models refuse to write.
     expect(() => writeMapToBuffer(map)).toThrow(/version 18 is not supported/);
   });
+
+  test('a v16 map can be upgraded to v20 by re-stamping version, then written', () => {
+    // Reading backfills every field the v20 writer needs, so flipping the
+    // version is enough to persist a legacy map in the modern format.
+    const map = readMapFromBuffer(buildMap(VERSION_OPTS[16], true));
+    expect(map.version).toBe(16);
+
+    map.version = 20; // opt in to the v20 writer
+    const reread = readMapFromBuffer(writeMapToBuffer(map));
+
+    expect(reread.version).toBe(20);
+    // Area survived the upgrade.
+    expect(reread.areas[1].rooms).toEqual([100]);
+    // Room + the converted legacy fields survived (symbol char, colour, style).
+    const room = reread.rooms[100];
+    expect(room.symbol).toBe('@');
+    expect(room.customLinesColor.n).toMatchObject({ r: 255, g: 128, b: 0 });
+    expect(room.customLinesStyle.n).toBe(2);
+    expect(room.customLines.n).toEqual([[1, 2]]);
+    expect(room.customLinesArrow.n).toBe(true);
+  });
 });
