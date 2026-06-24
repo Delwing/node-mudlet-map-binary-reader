@@ -87,8 +87,22 @@ function serializeArea(opts: BuildOpts): Uint8Array {
   return concat(parts);
 }
 
+interface RoomExtras {
+  /** Direction key the custom lines are stored under (default lower-case 'n'). */
+  lineKey?: string;
+  /** userData entries (e.g. a legacy symbol fallback). */
+  userData?: [string, string][];
+}
+
+/** Serialize a QMap<QString,QString> from key/value pairs. */
+function strMap(entries: [string, string][]): Uint8Array {
+  if (entries.length === 0) return emptyMap();
+  return sized(entries.length, ...entries.flatMap(([k, v]) => [s(k), s(v)]));
+}
+
 /** Serialize one room (id 100) per this version's layout. */
-function serializeRoom(opts: BuildOpts): Uint8Array {
+function serializeRoom(opts: BuildOpts, extras: RoomExtras = {}): Uint8Array {
+  const lineKey = extras.lineKey ?? 'n';
   const parts: Uint8Array[] = [
     i(100), // room id (read by the ROOMS container loop)
     i(1), // area
@@ -115,13 +129,13 @@ function serializeRoom(opts: BuildOpts): Uint8Array {
   ];
   // symbol: qint8 char code (v16-v18) or QString (v19+)
   parts.push(opts.stringSymbol ? s('@') : fromInt8(64)); // 64 == '@'
-  parts.push(emptyMap()); // userData
-  parts.push(sized(1, s('n'), sized(1, concat([d(1), d(2)])))); // customLines {n:[[1,2]]}
-  parts.push(sized(1, s('n'), b(true))); // customLinesArrow {n:true}
-  // customLinesColor: pre-v20 is QMap<QString, QList<int>> = {n:[255,128,0]}
-  parts.push(sized(1, s('n'), sized(3, i(255), i(128), i(0))));
-  // customLinesStyle: pre-v20 is QMap<QString, QString> = {n:"dash line"}
-  parts.push(sized(1, s('n'), s('dash line')));
+  parts.push(strMap(extras.userData ?? [])); // userData
+  parts.push(sized(1, s(lineKey), sized(1, concat([d(1), d(2)])))); // customLines {key:[[1,2]]}
+  parts.push(sized(1, s(lineKey), b(true))); // customLinesArrow {key:true}
+  // customLinesColor: pre-v20 is QMap<QString, QList<int>> = {key:[255,128,0]}
+  parts.push(sized(1, s(lineKey), sized(3, i(255), i(128), i(0))));
+  // customLinesStyle: pre-v20 is QMap<QString, QString> = {key:"dash line"}
+  parts.push(sized(1, s(lineKey), s('dash line')));
   parts.push(emptyMap()); // exitLocks: QList<int> = []
   parts.push(emptyMap()); // stubs: QList<int> = []
   parts.push(emptyMap()); // exitWeights
@@ -130,7 +144,7 @@ function serializeRoom(opts: BuildOpts): Uint8Array {
 }
 
 /** Build a full minimal map buffer for the given legacy version. */
-function buildMap(opts: BuildOpts, withContent: boolean): Uint8Array {
+function buildMap(opts: BuildOpts, withContent: boolean, roomExtras: RoomExtras = {}): Uint8Array {
   const parts: Uint8Array[] = [
     i(opts.version),
     emptyMap(), // envColors
@@ -149,7 +163,7 @@ function buildMap(opts: BuildOpts, withContent: boolean): Uint8Array {
   // labels container: int areasWithLabelsTotal
   parts.push(i(0));
   // rooms: read until EOF
-  if (withContent) parts.push(serializeRoom(opts));
+  if (withContent) parts.push(serializeRoom(opts, roomExtras));
   return concat(parts);
 }
 
@@ -211,6 +225,34 @@ describe('legacy map versions 16-19', () => {
       // unchanged-format custom-line fields round-trip as before.
       expect(room.customLines.n).toEqual([[1, 2]]);
       expect(room.customLinesArrow.n).toBe(true);
+    });
+  }
+
+  for (const version of [16, 17, 18]) {
+    test(`v${version}: room symbol falls back to userData["system.fallback_symbol"]`, () => {
+      // A non-ASCII / multi-char symbol can't fit in the legacy qint8, so Mudlet
+      // stashed it in userData and overrode the byte after the fact.
+      const map = readMapFromBuffer(
+        buildMap(VERSION_OPTS[version], true, { userData: [['system.fallback_symbol', '☠']] })
+      );
+      const room = map.rooms[100];
+      expect(room.symbol).toBe('☠');
+      // The fallback key is consumed (taken), not left to leak into export.
+      expect(room.userData).not.toHaveProperty('system.fallback_symbol');
+    });
+  }
+
+  for (const version of [16, 17, 18, 19]) {
+    test(`v${version}: legacy upper-case custom-line direction keys are lower-cased`, () => {
+      const map = readMapFromBuffer(buildMap(VERSION_OPTS[version], true, { lineKey: 'NE' }));
+      const room = map.rooms[100];
+      // 'NE' must be normalized to 'ne' across all four custom-line maps so the
+      // JSON/reader exports (which index by lower-case short names) find them.
+      expect(room.customLines.ne).toEqual([[1, 2]]);
+      expect(room.customLinesArrow.ne).toBe(true);
+      expect(room.customLinesColor.ne).toMatchObject({ r: 255, g: 128, b: 0 });
+      expect(room.customLinesStyle.ne).toBe(2);
+      expect(room.customLines).not.toHaveProperty('NE');
     });
   }
 

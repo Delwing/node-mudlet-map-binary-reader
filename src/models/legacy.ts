@@ -48,6 +48,39 @@ const PEN_STYLE: Record<string, number> = {
   'dash dot dot line': 5,
 };
 
+// Pre-v20 maps stored custom-line keys for the standard exits in upper case
+// (N, NE, UP, ...). Mudlet lower-cases those known direction tokens while
+// loading (TRoom::restore); special-exit command keys are left untouched.
+// Downstream (e.g. json-export) indexes custom lines by these lower-case short
+// names, so legacy maps must be normalized the same way or their custom lines
+// lose their color/style/arrow on export.
+const LEGACY_DIRECTION_KEYS: Record<string, string> = {
+  N: 'n',
+  E: 'e',
+  S: 's',
+  W: 'w',
+  UP: 'up',
+  DOWN: 'down',
+  NE: 'ne',
+  SE: 'se',
+  SW: 'sw',
+  NW: 'nw',
+  IN: 'in',
+  OUT: 'out',
+};
+
+/** Userdata key Mudlet uses to carry the real symbol of a pre-v19 room. */
+const FALLBACK_SYMBOL_KEY = 'system.fallback_symbol';
+
+/** Lower-case known direction keys, mirroring Mudlet's legacy custom-line load. */
+function normalizeDirectionKeys<T>(record: Record<string, T>): Record<string, T> {
+  const out: Record<string, T> = {};
+  for (const key of Object.keys(record)) {
+    out[LEGACY_DIRECTION_KEYS[key] ?? key] = record[key];
+  }
+  return out;
+}
+
 // A neutral default map symbol font for versions (v16-v18) that don't store one.
 // Mudlet itself falls back to extracting these from userData keys; we surface a
 // sane stand-in so downstream consumers (e.g. JSON export) always have a font.
@@ -341,6 +374,24 @@ export function registerLegacyMapModel(version: number): void {
           delete area.legacyForZUnused2;
           area.userData = {};
         }
+      }
+      for (const room of Object.values(map.rooms)) {
+        // v16-v18 carried the real (non-ASCII / multi-char) symbol in userData
+        // and overrode the qint8 char after reading it. Mirror that override,
+        // and `take` (remove) the key as Mudlet does.
+        if (!cfg.stringSymbol && room.userData) {
+          const fallback = room.userData[FALLBACK_SYMBOL_KEY];
+          if (typeof fallback === 'string' && fallback.length > 0) {
+            room.symbol = fallback;
+          }
+          delete room.userData[FALLBACK_SYMBOL_KEY];
+        }
+        // Lower-case the legacy upper-case direction keys so all four
+        // custom-line maps line up with how consumers index them.
+        room.customLines = normalizeDirectionKeys(room.customLines);
+        room.customLinesArrow = normalizeDirectionKeys(room.customLinesArrow);
+        room.customLinesColor = normalizeDirectionKeys(room.customLinesColor);
+        room.customLinesStyle = normalizeDirectionKeys(room.customLinesStyle);
       }
       return map as MudletMap;
     },
