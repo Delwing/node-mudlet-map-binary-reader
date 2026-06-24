@@ -113,13 +113,13 @@ describe('map version dispatch', () => {
 
   test('throws a clear error for an unsupported map version', () => {
     // writeBuffer always emits v20; the version is the leading big-endian
-    // int32, so bytes 0..3 are [0, 0, 0, 20]. Patch it to 16 to simulate an
-    // older map without needing a real v16 fixture.
+    // int32, so bytes 0..3 are [0, 0, 0, 20]. Patch it to 15 (below the
+    // oldest supported version) to simulate an unsupported map.
     const buf = MudletMapReader.writeBuffer(makeMinimalMap()).slice();
     expect([buf[0], buf[1], buf[2], buf[3]]).toEqual([0, 0, 0, 20]);
-    buf[3] = 16;
+    buf[3] = 15;
 
-    expect(() => readMapFromBuffer(buf)).toThrow(/Unsupported Mudlet map version 16/);
+    expect(() => readMapFromBuffer(buf)).toThrow(/Unsupported Mudlet map version 15/);
   });
 });
 

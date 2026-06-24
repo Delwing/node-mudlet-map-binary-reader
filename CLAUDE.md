@@ -2,7 +2,7 @@
 
 ## Project overview
 
-Node.js library for reading and writing Mudlet's binary map files (v20 format). Parses Qt QDataStream-serialized data into typed TypeScript models. Can export maps to JSON or to JS files for Mudlet Map Reader.
+Node.js library for reading and writing Mudlet's binary map files (v20 format), with read-only support for the older v16–v19 formats. Parses Qt QDataStream-serialized data into typed TypeScript models. Can export maps to JSON or to JS files for Mudlet Map Reader.
 
 ## Package manager
 
