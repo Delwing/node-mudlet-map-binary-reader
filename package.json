@@ -1,6 +1,6 @@
 {
   "name": "mudlet-map-binary-reader",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "type": "module",
   "keywords": [
     "mudlet",
@@ -44,7 +44,7 @@
     "typescript-eslint": "^8.58.2",
     "vitest": "^4.1.9"
   },
-  "description": "Reads Mudlet's map binary file (v20 only!). Can output .js files needed for Mudlet Map Reader.",
+  "description": "Reads and writes Mudlet's map binary file (v20), with read-only support for older formats (v16-v19). Can output .js files needed for Mudlet Map Reader.",
   "bugs": {
     "url": "https://github.com/Delwing/node-mudlet-map-binary-reader/issues"
   },

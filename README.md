@@ -8,6 +8,19 @@ The library works with **bytes** and never touches the filesystem — you handle
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## Supported map versions
+
+| Version   | Read | Write |
+| --------- | :--: | :---: |
+| v20       |  ✅  |  ✅   |
+| v16 – v19 |  ✅  |  ❌   |
+
+Older maps (v16–v19) are read into the same canonical model as v20, so all the
+read examples below work unchanged. To save a legacy map, set `map.version = 20`
+before calling `writeBuffer` — reading backfills every field the v20 writer
+needs, so the round-trip preserves areas, rooms, and converted legacy fields
+(symbol char, custom-line colour and style).
+
 ## Usage
 
 The library is browser-pure: it reads and writes **bytes** (`Uint8Array`), and never touches the filesystem itself. You supply the bytes — from Node's `fs`, a `fetch`/`Blob`, a file input, etc.
