@@ -33,6 +33,8 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Install root dependencies
+        run: yarn install --frozen-lockfile
       - name: Install demo dependencies
         working-directory: demo
         run: yarn install --frozen-lockfile
