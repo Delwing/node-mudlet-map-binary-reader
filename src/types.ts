@@ -15,6 +15,13 @@ export interface MudletMap {
   rooms: Record<number, MudletRoom>;
 }
 
+/**
+ * Every top-level {@link MudletMap} field except `rooms`. Produced by
+ * streaming reads (see `streamRooms`) so callers get area/label/colour
+ * metadata without the rooms ever being collected into memory at once.
+ */
+export type MudletMapHeader = Omit<MudletMap, 'rooms'>;
+
 /** A single area containing rooms, spatial bounds, and per-Z-level extents. */
 export interface MudletArea {
   rooms: number[];

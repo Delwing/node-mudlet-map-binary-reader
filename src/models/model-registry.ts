@@ -1,5 +1,5 @@
 import type { buffer } from 'qtdatastream-web';
-import type { MudletMap } from '../types';
+import type { MudletMap, MudletMapHeader, MudletRoom } from '../types';
 
 type ReadBufferInstance = InstanceType<typeof buffer.ReadBuffer>;
 
@@ -24,6 +24,14 @@ export interface MapModel {
   read(rb: ReadBufferInstance): MudletMap;
   /** Serialize a map of this version to a binary buffer. */
   write(map: MudletMap): Uint8Array;
+  /**
+   * Deserialize every top-level field except `rooms`, leaving the buffer
+   * positioned at the start of the (unframed) rooms blob. Lets a caller
+   * stream rooms one at a time instead of materializing the whole graph.
+   */
+  readHeader(rb: ReadBufferInstance): MudletMapHeader;
+  /** Deserialize a single `[id, room]` pair from the rooms blob. */
+  readRoom(rb: ReadBufferInstance): { id: number; room: MudletRoom };
 }
 
 const models = new Map<number, MapModel>();

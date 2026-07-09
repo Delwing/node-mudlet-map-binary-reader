@@ -96,7 +96,8 @@ export interface RendererExport {
   colors: { envId: number; colors: number[] }[];
 }
 
-function convertRoom(roomId: number, room: MudletRoom, hash?: string): RendererRoom {
+/** Convert a single room to the renderer shape (also used by streaming consumers). */
+export function convertRoom(roomId: number, room: MudletRoom, hash?: string): RendererRoom {
   const exits: Record<string, number> = {};
   for (const key of roomExits) {
     const dest = room[key as RoomExit];
@@ -150,7 +151,8 @@ function convertRoom(roomId: number, room: MudletRoom, hash?: string): RendererR
   return result;
 }
 
-function convertLabel(label: MudletLabel): RendererLabel {
+/** Convert a single label to the renderer shape (also used by streaming consumers). */
+export function convertLabel(label: MudletLabel): RendererLabel {
   const pixMap = uint8ToBase64(label.pixMap as Uint8Array);
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -185,7 +187,15 @@ function convertLabel(label: MudletLabel): RendererLabel {
 type MudletColorsJson = Record<string, number[]>;
 const mudletColorsTyped = mudletColors as MudletColorsJson;
 
-function generateColors(map: MudletMap): { envId: number; colors: number[] }[] {
+/**
+ * Derive the environment-id → RGB palette Mudlet uses to color rooms, from
+ * ANSI defaults overridden by custom env colors and env-color aliases. Only
+ * needs the map's color fields, so it also accepts a {@link MudletMapHeader}
+ * (e.g. from a streaming read that never materializes `rooms`).
+ */
+export function generateColors(
+  map: Pick<MudletMap, 'envColors' | 'mCustomEnvColors'>
+): { envId: number; colors: number[] }[] {
   const customEnvColors = map.mCustomEnvColors;
   const colors: Record<number, number[]> = {};
 

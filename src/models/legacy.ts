@@ -13,7 +13,7 @@ import { createMudletLabels, createMudletRooms, createMudletAreas } from './mudl
 import { QList, QMap, QPair, QMultiMap } from './qstream-containers';
 import { QString, QColor, QPoint } from './qstream-types';
 import { registerMapModel } from './model-registry';
-import type { MudletColor, MudletFont, MudletMap } from '../types';
+import type { MudletColor, MudletFont, MudletMap, MudletMapHeader, MudletRoom } from '../types';
 
 // ---------------------------------------------------------------------------
 // Mudlet map formats, versions 16-19 (read-only).
@@ -210,6 +210,55 @@ const CONFIGS: Record<number, LegacyConfig> = {
 };
 
 /**
+ * Backfill header-level (non-room) fields this version's layout doesn't
+ * carry, so the canonical `MudletMapHeader`/`MudletMap` is always fully
+ * populated for downstream consumers. Shared by the full `read` and the
+ * streaming `readHeader`.
+ */
+function backfillHeader(
+  header: MudletMapHeader & Record<string, unknown>,
+  cfg: LegacyConfig
+): void {
+  if (!cfg.hasMapUserData) header.mUserData = {};
+  if (!cfg.hasMapFont) {
+    header.mapSymbolFont = { ...DEFAULT_FONT };
+    header.mapFontFudgeFactor = 1.0;
+    header.useOnlyMapFont = false;
+  }
+  if (!cfg.modernArea) {
+    for (const value of Object.values(header.areas)) {
+      const area = value as unknown as Record<string, unknown>;
+      delete area.legacyForZUnused1;
+      delete area.legacyForZUnused2;
+      area.userData = {};
+    }
+  }
+}
+
+/**
+ * Backfill a single room's fields this version's layout doesn't carry.
+ * Shared by the full `read` and the streaming `readRoom`.
+ */
+function backfillRoom(room: MudletRoom & Record<string, unknown>, cfg: LegacyConfig): void {
+  // v16-v18 carried the real (non-ASCII / multi-char) symbol in userData
+  // and overrode the qint8 char after reading it. Mirror that override,
+  // and `take` (remove) the key as Mudlet does.
+  if (!cfg.stringSymbol && room.userData) {
+    const fallback = room.userData[FALLBACK_SYMBOL_KEY];
+    if (typeof fallback === 'string' && fallback.length > 0) {
+      room.symbol = fallback;
+    }
+    delete room.userData[FALLBACK_SYMBOL_KEY];
+  }
+  // Lower-case the legacy upper-case direction keys so all four
+  // custom-line maps line up with how consumers index them.
+  room.customLines = normalizeDirectionKeys(room.customLines);
+  room.customLinesArrow = normalizeDirectionKeys(room.customLinesArrow);
+  room.customLinesColor = normalizeDirectionKeys(room.customLinesColor);
+  room.customLinesStyle = normalizeDirectionKeys(room.customLinesStyle);
+}
+
+/**
  * Register a read-only MapModel for one of the legacy versions 16-19. Each
  * version gets its own version-qualified QUserType names and Qt container ids
  * so the global registry never clobbers another version (including v20).
@@ -222,6 +271,7 @@ export function registerLegacyMapModel(version: number): void {
 
   const TYPE = {
     MAP: `MudletMap@${version}`,
+    HEADER: `MudletMapHeader@${version}`,
     AREA: `MudletArea@${version}`,
     ROOM: `MudletRoom@${version}`,
     LABEL: `MudletLabel@${version}`,
@@ -352,46 +402,20 @@ export function registerLegacyMapModel(version: number): void {
       : { mRoomIdHash: LEGACY_TYPE.ROOM_ID }
   );
   mapFields.push({ labels: CONTAINER.LABELS });
-  mapFields.push({ rooms: CONTAINER.ROOMS });
-  QUserType.register(TYPE.MAP, mapFields);
+
+  // Registered without `rooms` so a caller can read up through `labels` and
+  // stop right at the start of the (unframed) rooms blob — see readHeader.
+  QUserType.register(TYPE.HEADER, mapFields);
+
+  QUserType.register(TYPE.MAP, [...mapFields, { rooms: CONTAINER.ROOMS }]);
 
   registerMapModel({
     version,
     read: (rb) => {
       const map = QUserType.read(rb, TYPE.MAP) as MudletMap & Record<string, unknown>;
-      // Backfill fields this version's layout doesn't carry so the canonical
-      // MudletMap is always fully populated for downstream consumers.
-      if (!cfg.hasMapUserData) map.mUserData = {};
-      if (!cfg.hasMapFont) {
-        map.mapSymbolFont = { ...DEFAULT_FONT };
-        map.mapFontFudgeFactor = 1.0;
-        map.useOnlyMapFont = false;
-      }
-      if (!cfg.modernArea) {
-        for (const value of Object.values(map.areas)) {
-          const area = value as unknown as Record<string, unknown>;
-          delete area.legacyForZUnused1;
-          delete area.legacyForZUnused2;
-          area.userData = {};
-        }
-      }
+      backfillHeader(map, cfg);
       for (const room of Object.values(map.rooms)) {
-        // v16-v18 carried the real (non-ASCII / multi-char) symbol in userData
-        // and overrode the qint8 char after reading it. Mirror that override,
-        // and `take` (remove) the key as Mudlet does.
-        if (!cfg.stringSymbol && room.userData) {
-          const fallback = room.userData[FALLBACK_SYMBOL_KEY];
-          if (typeof fallback === 'string' && fallback.length > 0) {
-            room.symbol = fallback;
-          }
-          delete room.userData[FALLBACK_SYMBOL_KEY];
-        }
-        // Lower-case the legacy upper-case direction keys so all four
-        // custom-line maps line up with how consumers index them.
-        room.customLines = normalizeDirectionKeys(room.customLines);
-        room.customLinesArrow = normalizeDirectionKeys(room.customLinesArrow);
-        room.customLinesColor = normalizeDirectionKeys(room.customLinesColor);
-        room.customLinesStyle = normalizeDirectionKeys(room.customLinesStyle);
+        backfillRoom(room as MudletRoom & Record<string, unknown>, cfg);
       }
       return map as MudletMap;
     },
@@ -400,6 +424,17 @@ export function registerLegacyMapModel(version: number): void {
         `Writing Mudlet map version ${version} is not supported (read-only). ` +
           `Mudlet only saves the latest format.`
       );
+    },
+    readHeader: (rb) => {
+      const header = QUserType.read(rb, TYPE.HEADER) as MudletMapHeader & Record<string, unknown>;
+      backfillHeader(header, cfg);
+      return header as MudletMapHeader;
+    },
+    readRoom: (rb) => {
+      const id = QInt.read(rb) as number;
+      const room = QUserType.get(TYPE.ROOM).read(rb) as MudletRoom;
+      backfillRoom(room as MudletRoom & Record<string, unknown>, cfg);
+      return { id, room };
     },
   });
 }

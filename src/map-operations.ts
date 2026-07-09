@@ -1,7 +1,7 @@
 import { buffer } from 'qtdatastream-web';
 import { QInt } from 'qtdatastream-web/types';
 import { getMapModel, getSupportedVersions } from './models/mudlet-models';
-import type { MudletMap, MudletRoom } from './types';
+import type { MudletMap, MudletMapHeader, MudletRoom } from './types';
 
 const { ReadBuffer } = buffer;
 
@@ -210,28 +210,35 @@ function rebuildRoomHashIndex(map: MudletMap): void {
 }
 
 /**
+ * Hydrate a single room's `mSpecialExits` / `mSpecialExitLocks` fields by
+ * parsing the `rawSpecialExits` layout Qt stores on disk.
+ */
+function hydrateRoomSpecialExits(room: RawRoom): void {
+  room.mSpecialExits = {};
+  room.mSpecialExitLocks = [];
+  for (const key in room.rawSpecialExits) {
+    if (!Object.hasOwn(room.rawSpecialExits, key)) continue;
+    for (const ex of room.rawSpecialExits[key as unknown as number]) {
+      if (ex.startsWith('0')) {
+        room.mSpecialExits[ex.substring(1)] = parseInt(key);
+      } else if (ex.startsWith('1')) {
+        room.mSpecialExits[ex.substring(1)] = parseInt(key);
+        room.mSpecialExitLocks.push(parseInt(key));
+      } else {
+        room.mSpecialExits[ex] = parseInt(key);
+      }
+    }
+  }
+}
+
+/**
  * Hydrate the `mSpecialExits` / `mSpecialExitLocks` fields on every room
  * by parsing the `rawSpecialExits` layout Qt stores on disk.
  */
 function hydrateSpecialExits(map: MudletMap): void {
   for (const roomId in map.rooms) {
     if (!Object.hasOwn(map.rooms, roomId)) continue;
-    const room = map.rooms[roomId] as RawRoom;
-    room.mSpecialExits = {};
-    room.mSpecialExitLocks = [];
-    for (const key in room.rawSpecialExits) {
-      if (!Object.hasOwn(room.rawSpecialExits, key)) continue;
-      for (const ex of room.rawSpecialExits[key as unknown as number]) {
-        if (ex.startsWith('0')) {
-          room.mSpecialExits[ex.substring(1)] = parseInt(key);
-        } else if (ex.startsWith('1')) {
-          room.mSpecialExits[ex.substring(1)] = parseInt(key);
-          room.mSpecialExitLocks.push(parseInt(key));
-        } else {
-          room.mSpecialExits[ex] = parseInt(key);
-        }
-      }
-    }
+    hydrateRoomSpecialExits(map.rooms[roomId] as RawRoom);
   }
 }
 
@@ -288,6 +295,55 @@ export function readMapFromBuffer(buf: Uint8Array): MudletMap {
   hydrateSpecialExits(map);
   populateRoomHashes(map);
   return map;
+}
+
+/**
+ * Stream a Mudlet binary map room-by-room without ever holding the whole
+ * room graph in memory. Decodes the (small) header sections eagerly — areas,
+ * labels, colours, names — then walks the trailing rooms blob, invoking
+ * `onRoom(id, room)` for each room and discarding it as soon as the callback
+ * returns. Peak memory is therefore `buffer + one room`, not the multi-GB
+ * fully-materialised object graph that {@link readMapFromBuffer} builds.
+ *
+ * This is the building block for chunking/packing very large maps (260 MB+)
+ * that cannot be loaded whole. The format is strictly sequential with no
+ * index, so this still reads every byte once — but it does not accumulate.
+ * Supported for every version {@link readMapFromBuffer} supports (v16-v20);
+ * an unsupported version throws the same error `readMapFromBuffer` would.
+ *
+ * Each emitted room has its `mSpecialExits` / `mSpecialExitLocks` hydrated,
+ * matching {@link readMapFromBuffer}. The per-room content `hash` is NOT set
+ * (it lives in the header's `mpRoomDbHashToRoomId` index, returned here so a
+ * caller can resolve hashes itself if needed).
+ *
+ * `onHeader`, if given, is invoked with the decoded header *before* the room
+ * loop begins. The rooms section itself is unframed (no count), but every
+ * area's `rooms` id-list is in the header, so a caller can sum them there to
+ * learn the total room count up front (e.g. for a progress bar / preallocation).
+ *
+ * @returns the map header (everything except `rooms`).
+ */
+export function streamRooms(
+  buf: Uint8Array,
+  onRoom: (id: number, room: MudletRoom) => void,
+  onHeader?: (header: MudletMapHeader) => void
+): MudletMapHeader {
+  const version = readMapVersion(buf);
+  const model = getMapModel(version);
+  if (!model) {
+    throw new Error(
+      `Unsupported Mudlet map version ${version}. Supported version(s): ${getSupportedVersions().join(', ')}.`
+    );
+  }
+  const rb = new ReadBuffer(buf);
+  const header = model.readHeader(rb);
+  onHeader?.(header);
+  while (rb.read_offset < rb.buffer.length) {
+    const { id, room } = model.readRoom(rb);
+    hydrateRoomSpecialExits(room as RawRoom);
+    onRoom(id, room);
+  }
+  return header;
 }
 
 /**

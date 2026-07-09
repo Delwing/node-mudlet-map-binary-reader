@@ -4,7 +4,7 @@ import { createMudletLabels, createMudletRooms, createMudletAreas } from './mudl
 import { QList, QMap, QPair, QMultiMap } from './qstream-containers';
 import { QString, QColor, QPoint } from './qstream-types';
 import { registerMapModel } from './model-registry';
-import type { MudletMap } from '../types';
+import type { MudletMap, MudletMapHeader, MudletRoom } from '../types';
 
 // ---------------------------------------------------------------------------
 // Mudlet map format, version 20.
@@ -24,6 +24,7 @@ registerBaseTypes();
 // in the global type registry without clobbering each other.
 const TYPE = {
   MAP: `MudletMap@${VERSION}`,
+  HEADER: `MudletMapHeader@${VERSION}`,
   AREA: `MudletArea@${VERSION}`,
   ROOM: `MudletRoom@${VERSION}`,
   LABEL: `MudletLabel@${VERSION}`,
@@ -112,7 +113,11 @@ QUserType.register(TYPE.LABEL, [
   { showOnTop: Types.BOOL },
 ]);
 
-QUserType.register(TYPE.MAP, [
+// Every top-level field except the trailing `rooms` blob. The rooms section
+// is an unframed read-to-EOF stream with no count and no per-record length
+// (see MudletRooms), so it always serialises last — registering this subset
+// separately lets a reader stop right before it and stream rooms one by one.
+const HEADER_FIELDS = [
   { version: Types.INT },
   { envColors: QMap(QInt, QInt) },
   { areaNames: QMap(QInt, QString, true) },
@@ -125,11 +130,19 @@ QUserType.register(TYPE.MAP, [
   { areas: CONTAINER.AREAS },
   { mRoomIdHash: QMap(QString, QInt) },
   { labels: CONTAINER.LABELS },
-  { rooms: CONTAINER.ROOMS },
-]);
+];
+
+QUserType.register(TYPE.HEADER, HEADER_FIELDS);
+QUserType.register(TYPE.MAP, [...HEADER_FIELDS, { rooms: CONTAINER.ROOMS }]);
 
 registerMapModel({
   version: VERSION,
   read: (rb) => QUserType.read(rb, TYPE.MAP) as MudletMap,
   write: (map) => QUserType.get(TYPE.MAP).from(map).toBuffer(true) as Uint8Array,
+  readHeader: (rb) => QUserType.read(rb, TYPE.HEADER) as MudletMapHeader,
+  readRoom: (rb) => {
+    const id = QInt.read(rb) as number;
+    const room = QUserType.get(TYPE.ROOM).read(rb) as MudletRoom;
+    return { id, room };
+  },
 });
