@@ -75,7 +75,10 @@ describe('reader-export', () => {
       map.rooms[1].exitLocks = [1];
       map.rooms[1].stubs = [4];
       map.rooms[1].exitWeights = { north: 7 };
-      map.rooms[1].mSpecialExitLocks = [99];
+      // The model keys locks by command; the renderer export converts them to
+      // the destination ids mudlet-map-renderer indexes by.
+      map.rooms[1].mSpecialExits = { 'open door': 99 };
+      map.rooms[1].mSpecialExitLocks = ['open door'];
 
       const { mapData } = readerExport(map);
       const room = mapData[0].rooms[0] as unknown as Record<string, unknown>;

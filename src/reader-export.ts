@@ -34,7 +34,7 @@ export interface RendererCustomLine {
  * A room as consumed by the JS Mudlet Map Renderer.
  *
  * Preserves every field from {@link MudletRoom} (`x`, `y`, `z`, `weight`, `name`,
- * `userData`, `doors`, `exitLocks`, `stubs`, `exitWeights`, `mSpecialExitLocks`,
+ * `userData`, `doors`, `exitLocks`, `stubs`, `exitWeights`,
  * `isLocked`, …) and only remaps the per-direction exits, special exits, custom lines,
  * environment, and symbol fields.
  */
@@ -45,10 +45,20 @@ export type RendererRoom = Omit<
   | 'up' | 'down' | 'in' | 'out'
   | 'environment' | 'symbol'
   | 'mSpecialExits'
+  | 'mSpecialExitLocks'
   | 'customLines' | 'customLinesArrow' | 'customLinesColor' | 'customLinesStyle'
   | 'hash'
 > & {
   id: number;
+  /**
+   * Destination room ids whose special exit is locked. The map model keys locks
+   * by command, as Mudlet does, but mudlet-map-renderer tests membership with
+   * the exit's target id (`new Set(room.mSpecialExitLocks).has(targetId)`), so
+   * the export converts. A room with two special exits to the same target, only
+   * one of them locked, therefore reads as locked here — a limitation of the
+   * renderer's shape, not of the model.
+   */
+  mSpecialExitLocks: number[];
   env?: number;
   roomChar?: string;
   exits: Record<string, number>;
@@ -122,7 +132,7 @@ export function convertRoom(roomId: number, room: MudletRoom, hash?: string): Re
   }
 
   // Mirror 0.6.0: spread the original room (preserving x, y, z, weight, name,
-  // userData, doors, exitLocks, stubs, exitWeights, mSpecialExitLocks, isLocked, …),
+  // userData, doors, exitLocks, stubs, exitWeights, isLocked, …),
   // strip the per-direction exit keys and custom-line working fields, and rename
   // mSpecialExits/environment/symbol. environment and symbol are only renamed when
   // truthy (matching 0.6.0's `if (room.environment)` / `if (room.symbol)` checks).
@@ -132,6 +142,7 @@ export function convertRoom(roomId: number, room: MudletRoom, hash?: string): Re
     south: _s, southwest: _sw, west: _w, northwest: _nw,
     up: _u, down: _d, in: _in, out: _out,
     mSpecialExits,
+    mSpecialExitLocks,
     customLines: _cl, customLinesArrow: _cla, customLinesColor: _clc, customLinesStyle: _cls,
     environment, symbol, hash: _h,
     ...rest
@@ -143,6 +154,13 @@ export function convertRoom(roomId: number, room: MudletRoom, hash?: string): Re
     id: roomId,
     exits,
     specialExits: mSpecialExits,
+    mSpecialExitLocks: [
+      ...new Set(
+        (mSpecialExitLocks ?? [])
+          .map((command) => mSpecialExits[command])
+          .filter((destination) => destination !== undefined)
+      ),
+    ],
     customLines,
   };
   if (environment) result.env = environment;

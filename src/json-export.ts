@@ -220,9 +220,7 @@ function convertRoom(roomId: number, map: MudletMap): RoomOutput {
       name: specialExit,
       exitId: destId,
       weight: getExitWeight(specialExit, room.exitWeights, 1),
-      locked: room.mSpecialExitLocks?.find((destinationRoom) => destId === destinationRoom)
-        ? true
-        : undefined,
+      locked: room.mSpecialExitLocks?.includes(specialExit) ? true : undefined,
       door: room.doors[specialExit] !== undefined ? doorMap[room.doors[specialExit]] : undefined,
       customLine: convertCustomLine(
         room.customLines[specialExit],

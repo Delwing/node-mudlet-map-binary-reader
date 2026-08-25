@@ -111,11 +111,12 @@ export const makeMinimalMap = (): MudletMap => ({
 
 // Room with unlocked and locked special exits.
 // Targets are fictional room IDs (99, 100) — they don't need to exist in the map.
-// mSpecialExitLocks is per destination room ID: 100 is locked, 99 is not.
+// mSpecialExitLocks is per command, as Mudlet's QSet<QString> is: 'push lever'
+// (to room 100) is locked, 'open door' (to room 99) is not.
 export const makeMapWithSpecialExits = (): MudletMap => {
   const map = makeMinimalMap();
   map.rooms[1].mSpecialExits = { 'open door': 99, 'push lever': 100 };
-  map.rooms[1].mSpecialExitLocks = [100];
+  map.rooms[1].mSpecialExitLocks = ['push lever'];
   return map;
 };
 

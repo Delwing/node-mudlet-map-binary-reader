@@ -69,7 +69,7 @@ export interface MudletRoom {
   isLocked: boolean;
   rawSpecialExits?: Record<number, string[]>;
   mSpecialExits: Record<string, number>;
-  mSpecialExitLocks: number[];
+  mSpecialExitLocks: string[];
   symbol: string;
   userData: Record<string, string>;
   customLines: Record<string, [number, number][]>;

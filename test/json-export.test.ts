@@ -293,7 +293,7 @@ describe('json-export', () => {
     test('locked special exit has locked: true', () => {
       const map = makeMinimalMap();
       map.rooms[1].mSpecialExits = { 'push button': 2 };
-      map.rooms[1].mSpecialExitLocks = [2];
+      map.rooms[1].mSpecialExitLocks = ['push button'];
       exportMap(map, '/tmp/out.json');
       const areas = getWrittenJson().areas as unknown[];
       const area = areas[0] as Record<string, unknown[]>;

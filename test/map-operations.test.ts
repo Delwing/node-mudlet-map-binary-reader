@@ -46,9 +46,25 @@ describe('readBuffer / writeBuffer round-trip', () => {
       'open door': 99,
       'push lever': 100,
     });
-    expect(result.rooms[1].mSpecialExitLocks).toEqual(expect.arrayContaining([100]));
-    expect(result.rooms[1].mSpecialExitLocks).toHaveLength(1);
-    expect(result.rooms[1].mSpecialExitLocks).not.toContain(99);
+    expect(result.rooms[1].mSpecialExitLocks).toEqual(['push lever']);
+    expect(result.rooms[1].mSpecialExitLocks).not.toContain('open door');
+  });
+
+  test('two special exits to the same room keep their own lock state', () => {
+    // The lock belongs to the command (Mudlet keeps a QSet<QString>), not to the
+    // destination. Keying it by destination collapsed a room like this into
+    // "both locked" and wrote 1open door where the file had 0open door.
+    const input = makeMinimalMap();
+    input.rooms[1].mSpecialExits = { 'open door': 99, 'squeeze through': 99 };
+    input.rooms[1].mSpecialExitLocks = ['squeeze through'];
+
+    const result = MudletMapReader.readBuffer(MudletMapReader.writeBuffer(input));
+
+    expect(result.rooms[1].mSpecialExits).toEqual({
+      'open door': 99,
+      'squeeze through': 99,
+    });
+    expect(result.rooms[1].mSpecialExitLocks).toEqual(['squeeze through']);
   });
 
   test('unlocked special exit has no entry in mSpecialExitLocks', () => {

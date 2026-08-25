@@ -223,7 +223,7 @@ function hydrateRoomSpecialExits(room: RawRoom): void {
         room.mSpecialExits[ex.substring(1)] = parseInt(key);
       } else if (ex.startsWith('1')) {
         room.mSpecialExits[ex.substring(1)] = parseInt(key);
-        room.mSpecialExitLocks.push(parseInt(key));
+        room.mSpecialExitLocks.push(ex.substring(1));
       } else {
         room.mSpecialExits[ex] = parseInt(key);
       }
@@ -257,7 +257,7 @@ function dehydrateSpecialExits(map: MudletMap): void {
       if (rawSpecialExits[exRoomId] === undefined) {
         rawSpecialExits[exRoomId] = [];
       }
-      const locked = room.mSpecialExitLocks.indexOf(exRoomId) > -1;
+      const locked = room.mSpecialExitLocks.indexOf(exit) > -1;
       rawSpecialExits[exRoomId].push((locked ? '1' : '0') + exit);
     }
     room.rawSpecialExits = rawSpecialExits;
