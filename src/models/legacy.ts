@@ -242,11 +242,7 @@ function backfillHeader(
  * Backfill a single room's fields this version's layout doesn't carry.
  * Shared by the full `read` and the streaming `readRoom`.
  */
-function backfillRoom(
-  room: MudletRoom & Record<string, unknown>,
-  cfg: LegacyConfig,
-  version: number
-): void {
+function backfillRoom(room: MudletRoom & Record<string, unknown>, version: number): void {
   // v16-v18 carried the real (non-ASCII / multi-char) symbol in userData and
   // overrode the qint8 char after reading it; v19 carries it in the stream and
   // any copy left in userData is stale. applyRoomFallbacks handles both.
@@ -416,7 +412,7 @@ export function registerLegacyMapModel(version: number): void {
       const map = QUserType.read(rb, TYPE.MAP) as MudletMap & Record<string, unknown>;
       backfillHeader(map, cfg, version);
       for (const room of Object.values(map.rooms)) {
-        backfillRoom(room as MudletRoom & Record<string, unknown>, cfg, version);
+        backfillRoom(room as MudletRoom & Record<string, unknown>, version);
       }
       return map as MudletMap;
     },
@@ -434,7 +430,7 @@ export function registerLegacyMapModel(version: number): void {
     readRoom: (rb) => {
       const id = QInt.read(rb) as number;
       const room = QUserType.get(TYPE.ROOM).read(rb) as MudletRoom;
-      backfillRoom(room as MudletRoom & Record<string, unknown>, cfg, version);
+      backfillRoom(room as MudletRoom & Record<string, unknown>, version);
       return { id, room };
     },
   });
