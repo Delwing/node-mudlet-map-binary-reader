@@ -1,5 +1,20 @@
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+# 1.3.0
+- **match Mudlet's handling of `system.fallback_*` user-data keys on read**, so the model this library hands back equals the one Mudlet holds in memory (mirrors `TRoom::restore` / `TMap::restore`). Mudlet copies a field into user data under a `system.fallback_*` key only when saving a format too old to carry it in the stream, and takes the key back out on load:
+  - **v19 and up**: the stream is authoritative, so a `system.fallback_symbol` (room) or `system.fallback_mapSymbolFont` / `…FontFudgeFactor` / `…onlyUseMapSymbolFont` (map) still present in the file is a stale leak from an older save — it is now removed instead of surfacing as user data nobody set. Every Mudlet before 2026 (PR Mudlet/Mudlet#9469, unreleased as of 4.22.0) wrote these into the live map and saved them back, so real files do carry them: the 7.8 MB Arkadia map had 751 rooms affected. Keys that are still authoritative at the version being read (`system.fallback_symbol_color`, `system.fallback_hidden`, `system.fallback_map2DZoom` below v21) are deliberately kept.
+  - **v17/v18**: the map symbol font, its fudge factor and the only-use-this-font flag are now recovered from those keys instead of being replaced by a hardcoded stand-in font and left in `mUserData` — a v17/v18 → v20 upgrade previously lost the map's real symbol font. Only the first ten comma-separated fields of the font description are read: `QFont::toString()`/`fromString()` round-tripping in older Qt re-appends the trailing nine fields on every cycle, so a long-lived map carries hundreds of them (the Arkadia map: 1531 fields, i.e. 170 old-format saves). Mudlet applies the same cut.
+  - the v16-v18 room symbol fallback keeps its existing behaviour; it now shares one implementation (`src/models/fallback-keys.ts`) with everything above.
+- **narrow `QVector3D` coordinates to float precision on read** (label `pos`, area `pos`/`span`). Qt serialises the vector as three doubles — `QDataStream` defaults to `DoublePrecision` — but its components are floats, so Mudlet narrows every coordinate it loads and writes the narrowed value back. Keeping the extra precision left coordinates that a Mudlet load quietly rewrites, which then surfaced as a diff nobody made (18 of 388 labels in the Arkadia map).
+- **round-trip fidelity is unchanged for any file Mudlet itself wrote**: `readMapFromBuffer` → `writeMapToBuffer` on a current Mudlet save is still byte-for-byte identical. A file carrying data Mudlet cannot represent (stale fallback keys, sub-float precision) is now normalised to what Mudlet would write — once, and stably: re-saving the result reproduces the same bytes.
+- no public API change; 134 tests pass (10 new).
+
+# 1.2.0
+- add `streamRooms(buf, onRoom, onHeader)`: decodes the header eagerly, then walks the rooms blob one room at a time so a caller never holds the full object graph. Peak memory is buffer + one room instead of the whole parsed map, which is what makes multi-hundred-MB maps processable at all. `MapModel` gained `readHeader` / `readRoom` (each version's fields split into header + trailing rooms blob, same effective schema), and `convertRoom` / `convertLabel` are now exported.
+
+# 1.1.0
+- read-only support for legacy map formats **v16-v19** (v20 remains the only version this library writes). Reads dispatch on the on-disk version; fields a legacy layout doesn't carry are backfilled so `MudletMap` stays version-agnostic for consumers. Package description and README updated to match.
+
 # 1.0.3
 - **~3.3× faster decode** of maps with labels (Arkadia map: `readBuffer` + `export` ~857 ms → ~261 ms), via two fixes:
   - `readBuffer` ~590 ms → ~90 ms: `QPixMap.read` found each embedded PNG's end by scanning byte-by-byte and hex-stringifying a fresh 4-byte slice at every position (`toHex`) — hundreds of millions of tiny allocations across all labels. Replaced with allocation-free `readUInt32BE()` integer compares against the PNG magic (`0x89504e47`) and `IEND` (`0x49454e44`) markers. Identical behavior, no hot-loop allocations.

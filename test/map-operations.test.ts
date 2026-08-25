@@ -1,6 +1,7 @@
 'use strict';
 
-import { MudletMapReader, readMapFromBuffer } from '../src';
+import { MudletMapReader, readMapFromBuffer, streamRooms } from '../src';
+import type { MudletRoom } from '../src';
 import { getMapModel } from '../src/models/mudlet-models';
 import {
   makeMinimalMap,
@@ -487,5 +488,78 @@ describe('rebuildRoomHashIndex on write', () => {
     } finally {
       warnSpy.mockRestore();
     }
+  });
+});
+
+describe('v20 fallback user-data keys', () => {
+  // Mudlet copies a field into user data under a system.fallback_* key only
+  // when saving a format too old to carry it in the stream, and takes the key
+  // back out on load. At v20 the symbol and the map font settings ARE in the
+  // stream, so any such key in the file is a stale leak from an older save —
+  // Mudlet drops it (TRoom::restore / TMap::restore) and so must we, or a map
+  // we hand back re-introduces keys the next Mudlet load would delete.
+
+  test('stale room symbol and map font keys are dropped on read', () => {
+    const input = makeMinimalMap();
+    input.rooms[1].symbol = 'X';
+    input.rooms[1].userData = {
+      'system.fallback_symbol': 'STALE',
+      'system.fallback_symbol_color': '#ff0000',
+      internal_id: 'keep',
+    };
+    input.mUserData = {
+      'system.fallback_mapSymbolFont': 'Stale,1,-1,5,50,0,0,0,0,0',
+      'system.fallback_mapSymbolFontFudgeFactor': '9',
+      'system.fallback_onlyUseMapSymbolFont': 'true',
+      revision: 'keep',
+    };
+
+    const result = readMapFromBuffer(MudletMapReader.writeBuffer(input));
+
+    // The stream's symbol stands; the stale copy is gone.
+    expect(result.rooms[1].symbol).toBe('X');
+    expect(result.rooms[1].userData).toEqual({
+      // Only stale from v21 on, where the stream carries the symbol colour;
+      // at v20 this key is still the authoritative store, so it must survive.
+      'system.fallback_symbol_color': '#ff0000',
+      internal_id: 'keep',
+    });
+    expect(result.mUserData).toEqual({ revision: 'keep' });
+    // The font itself comes from the stream, not from the stale description.
+    expect(result.mapSymbolFont.family).toBe('Arial');
+  });
+
+  test('streamRooms strips the stale room key too', () => {
+    const input = makeMinimalMap();
+    input.rooms[1].userData = { 'system.fallback_symbol': 'STALE', note: 'keep' };
+
+    const seen: MudletRoom[] = [];
+    streamRooms(MudletMapReader.writeBuffer(input), (_id, room) => seen.push(room));
+
+    expect(seen).toHaveLength(1);
+    expect(seen[0].userData).toEqual({ note: 'keep' });
+  });
+});
+
+describe('QVector3D coordinate precision', () => {
+  test('label and area coordinates are narrowed to float precision on read', () => {
+    // Qt streams a QVector3D as three doubles, but its components are floats:
+    // Mudlet narrows every coordinate as it loads and writes the narrowed
+    // value back. A double that survives here would be silently rewritten the
+    // first time a player re-saves, showing up as a diff nobody made.
+    const precise = 101.619183559273;
+    expect(Math.fround(precise)).not.toBe(precise); // guard: not float-exact
+
+    const input = makeMapWithLabels();
+    input.labels[1][0].pos = [precise, -99, 0];
+    input.areas[1].pos = [precise, 0, 0];
+
+    const result = readMapFromBuffer(MudletMapReader.writeBuffer(input));
+
+    expect(result.labels[1][0].pos).toEqual([Math.fround(precise), -99, 0]);
+    expect(result.areas[1].pos).toEqual([Math.fround(precise), 0, 0]);
+    // ...and re-reading its own output is then stable.
+    const again = readMapFromBuffer(MudletMapReader.writeBuffer(result));
+    expect(again.labels[1][0].pos).toEqual(result.labels[1][0].pos);
   });
 });

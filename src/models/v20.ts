@@ -4,6 +4,7 @@ import { createMudletLabels, createMudletRooms, createMudletAreas } from './mudl
 import { QList, QMap, QPair, QMultiMap } from './qstream-containers';
 import { QString, QColor, QPoint } from './qstream-types';
 import { registerMapModel } from './model-registry';
+import { applyMapFallbacks, applyRoomFallbacks } from './fallback-keys';
 import type { MudletMap, MudletMapHeader, MudletRoom } from '../types';
 
 // ---------------------------------------------------------------------------
@@ -137,12 +138,22 @@ QUserType.register(TYPE.MAP, [...HEADER_FIELDS, { rooms: CONTAINER.ROOMS }]);
 
 registerMapModel({
   version: VERSION,
-  read: (rb) => QUserType.read(rb, TYPE.MAP) as MudletMap,
+  read: (rb) => {
+    const map = QUserType.read(rb, TYPE.MAP) as MudletMap;
+    applyMapFallbacks(map, VERSION);
+    for (const room of Object.values(map.rooms)) applyRoomFallbacks(room, VERSION);
+    return map;
+  },
   write: (map) => QUserType.get(TYPE.MAP).from(map).toBuffer(true) as Uint8Array,
-  readHeader: (rb) => QUserType.read(rb, TYPE.HEADER) as MudletMapHeader,
+  readHeader: (rb) => {
+    const header = QUserType.read(rb, TYPE.HEADER) as MudletMapHeader;
+    applyMapFallbacks(header, VERSION);
+    return header;
+  },
   readRoom: (rb) => {
     const id = QInt.read(rb) as number;
     const room = QUserType.get(TYPE.ROOM).read(rb) as MudletRoom;
+    applyRoomFallbacks(room, VERSION);
     return { id, room };
   },
 });

@@ -144,7 +144,12 @@ function serializeRoom(opts: BuildOpts, extras: RoomExtras = {}): Uint8Array {
 }
 
 /** Build a full minimal map buffer for the given legacy version. */
-function buildMap(opts: BuildOpts, withContent: boolean, roomExtras: RoomExtras = {}): Uint8Array {
+function buildMap(
+  opts: BuildOpts,
+  withContent: boolean,
+  roomExtras: RoomExtras = {},
+  mapUserData: [string, string][] = []
+): Uint8Array {
   const parts: Uint8Array[] = [
     i(opts.version),
     emptyMap(), // envColors
@@ -152,7 +157,7 @@ function buildMap(opts: BuildOpts, withContent: boolean, roomExtras: RoomExtras 
     emptyMap(), // mCustomEnvColors
     emptyMap(), // mpRoomDbHashToRoomId
   ];
-  if (opts.hasMapUserData) parts.push(emptyMap());
+  if (opts.hasMapUserData) parts.push(strMap(mapUserData));
   if (opts.hasMapFont) {
     parts.push(QFont.from(TEST_FONT).toBuffer(), d(1.5), b(true)); // font, fudge, onlyMapFont
   }
@@ -255,6 +260,93 @@ describe('legacy map versions 16-19', () => {
       expect(room.customLines).not.toHaveProperty('NE');
     });
   }
+
+
+  // Mudlet stores the map symbol font in the stream from v19 on; before that it
+  // copied the three settings into map user data under system.fallback_* keys
+  // (TMap::restore takes them back out). v16 has no map user data at all.
+  for (const version of [17, 18]) {
+    test(`v${version}: map symbol font is recovered from the userData fallbacks`, () => {
+      const map = readMapFromBuffer(
+        buildMap(VERSION_OPTS[version], false, {}, [
+          ['system.fallback_mapSymbolFont', 'Ubuntu Mono,14,-1,5,75,1,1,0,1,0'],
+          ['system.fallback_mapSymbolFontFudgeFactor', '1.5'],
+          ['system.fallback_onlyUseMapSymbolFont', 'true'],
+          ['keep_me', 'yes'],
+        ])
+      );
+
+      expect(map.mapSymbolFont.family).toBe('Ubuntu Mono');
+      expect(map.mapSymbolFont.pointSize).toBe(14);
+      expect(map.mapSymbolFont.styleHint).toBe(5);
+      expect(map.mapSymbolFont.weight).toBe(75);
+      // style=1 (italic), underline=1, strikeOut=0, fixedPitch=1
+      expect(map.mapSymbolFont.styleSetting).toBe(true);
+      expect(map.mapSymbolFont.underline).toBe(true);
+      expect(map.mapSymbolFont.strikeOut).toBe(false);
+      expect(map.mapSymbolFont.fixedPitch).toBe(true);
+      expect(map.mapSymbolFont.fontBits & 0x0b).toBe(0x0b);
+      expect(map.mapFontFudgeFactor).toBeCloseTo(1.5);
+      expect(map.useOnlyMapFont).toBe(true);
+
+      // Consumed, not left to leak into a v20 save; unrelated keys stay.
+      expect(map.mUserData).toEqual({ keep_me: 'yes' });
+    });
+
+    test(`v${version}: only the first ten fields of a duplicated font string are used`, () => {
+      // QFont::toString()/fromString() round-tripping in older Qt re-appended
+      // the trailing nine fields on every cycle, so a long-lived map carries a
+      // description hundreds of fields long. Mudlet cuts it at ten; so do we.
+      const tail = ',14,-1,5,75,0,0,0,0,0';
+      const bloated = 'Ubuntu Mono' + tail.repeat(170);
+
+      const map = readMapFromBuffer(
+        buildMap(VERSION_OPTS[version], false, {}, [['system.fallback_mapSymbolFont', bloated]])
+      );
+
+      expect(map.mapSymbolFont.family).toBe('Ubuntu Mono');
+      expect(map.mapSymbolFont.pointSize).toBe(14);
+      expect(map.mapSymbolFont.weight).toBe(75);
+    });
+
+    test(`v${version}: a font fallback too short to parse leaves the default in place`, () => {
+      const map = readMapFromBuffer(
+        buildMap(VERSION_OPTS[version], false, {}, [
+          ['system.fallback_mapSymbolFont', 'Ubuntu Mono,14'],
+        ])
+      );
+
+      expect(map.mapSymbolFont.family).toBe('Bitstream Vera Sans Mono');
+      expect(map.mUserData).not.toHaveProperty('system.fallback_mapSymbolFont');
+    });
+  }
+
+  test('v19 strips stale fallback keys the stream now carries natively', () => {
+    // From v19 the symbol and the font settings are in the stream, so a copy
+    // left in user data is a stale leak from an older save (Mudlet wrote these
+    // into the live map until 2026) — it must not survive into our model.
+    const map = readMapFromBuffer(
+      buildMap(
+        VERSION_OPTS[19],
+        true,
+        { userData: [['system.fallback_symbol', 'X'], ['note', 'keep']] },
+        [
+          ['system.fallback_mapSymbolFont', 'Stale,1,-1,5,50,0,0,0,0,0'],
+          ['system.fallback_mapSymbolFontFudgeFactor', '9'],
+          ['system.fallback_onlyUseMapSymbolFont', 'false'],
+          ['revision', 'keep'],
+        ]
+      )
+    );
+
+    // The stream's values win, and every stale key is gone.
+    expect(map.rooms[100].symbol).toBe('@');
+    expect(map.rooms[100].userData).toEqual({ note: 'keep' });
+    expect(map.mapSymbolFont.family).toBe('Ubuntu Mono');
+    expect(map.mapFontFudgeFactor).toBeCloseTo(1.5);
+    expect(map.useOnlyMapFont).toBe(true);
+    expect(map.mUserData).toEqual({ revision: 'keep' });
+  });
 
   test('v19 reads the stored map symbol font and fudge factor', () => {
     const map = readMapFromBuffer(buildMap(VERSION_OPTS[19], false));

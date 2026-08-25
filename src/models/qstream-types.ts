@@ -143,8 +143,18 @@ export class QPoint extends QClass {
 }
 
 export class QVector extends QClass {
+  // Qt serialises a QVector3D as three doubles (QDataStream defaults to
+  // DoublePrecision), but the vector's own components are floats. Mudlet
+  // therefore narrows every coordinate it loads, and writes the narrowed
+  // value back out. Narrow on read too, so our model holds what Mudlet's
+  // would: keeping the extra precision would leave coordinates that a Mudlet
+  // load quietly changes, surfacing as a spurious diff on the next save.
   static override read(buffer: ReadBuffer): [number, number, number] {
-    return [QDouble.read(buffer), QDouble.read(buffer), QDouble.read(buffer)];
+    return [
+      Math.fround(QDouble.read(buffer) as number),
+      Math.fround(QDouble.read(buffer) as number),
+      Math.fround(QDouble.read(buffer) as number),
+    ];
   }
 
   override toBuffer(): Uint8Array {
